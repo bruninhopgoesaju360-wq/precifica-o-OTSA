@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Precificação OTSA</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    font-family: Arial;
+    background: #191917;
+    color: #eeeae1;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 420px;
+    padding: 15px;
+}
+
+.header {
+    text-align: center;
+}
+
+.logo {
+    width: 90px;
+}
+
+h2 { color: #79a1bc; }
+
+.card {
+    background: #222220;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #191917;
+    color: #eeeae1;
+}
+
+.extra {
+    display: flex;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.extra input { flex: 1; }
+.extra input:nth-child(2),
+.extra input:nth-child(3) { max-width: 70px; }
+
+.remove {
+    width: 35px;
+    background: red;
+    color: white;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.primary { background: #79a1bc; color: #191917; }
+.secondary { background: #333; }
+.pdf { background: #eeeae1; color: #191917; }
+
+.preview {
+    margin-top: 10px;
+    text-align: center;
+}
+
+.preview img {
+    max-width: 100%;
+    border-radius: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+    <img src="logo.png" class="logo">
+    <h2>Precificação OTSA</h2>
+</div>
+
+<div class="card">
+<input id="nome" placeholder="Nome do produto">
+<select id="categoria" onchange="setMargem(this.value)">
+<option value="">Categoria</option>
+<option value="acessorio">Acessório</option>
+<option value="blusa">Blusa</option>
+</select>
+
+<input id="custo" type="number" placeholder="Custo">
+<input id="margem" placeholder="Margem (%)">
+</div>
+
+<div class="card">
+<label>Foto do produto</label>
+<input type="file" accept="image/*" onchange="previewImagem(event)">
+<div class="preview" id="preview"></div>
+</div>
+
+<div class="card">
+<div id="extras"></div>
+<button class="secondary" onclick="addExtra()">+ Extra</button>
+
+<input id="frete" type="number" placeholder="Frete">
+<input id="desconto" type="number" placeholder="Desconto (%)">
+</div>
+
+<div class="card">
+<textarea id="obs" placeholder="Observações"></textarea>
+</div>
+
+<div class="card">
+<button class="primary" onclick="calcular()">Calcular</button>
+<button class="pdf" onclick="gerarPDF(true)">Compartilhar PDF</button>
+<button class="pdf" onclick="gerarPDF(false)">Salvar PDF</button>
+</div>
+
+<div class="card" id="resultado"></div>
+
+</div>
+
+<script>
+let dados = {};
+let imagemBase64 = "";
+
+function setMargem(tipo){
+    if(tipo==="acessorio") margem.value=200;
+    if(tipo==="blusa") margem.value=120;
+}
+
+function addExtra(){
+    let div=document.createElement("div");
+    div.className="extra";
+    div.innerHTML=`
+        <input placeholder="Nome">
+        <input type="number" placeholder="R$">
+        <input type="number" placeholder="Qtd">
+        <button class="remove" onclick="this.parentElement.remove()">X</button>
+    `;
+    extras.appendChild(div);
+}
+
+function previewImagem(event){
+    let file = event.target.files[0];
+    let reader = new FileReader();
+
+    reader.onload = function(e){
+        imagemBase64 = e.target.result;
+        preview.innerHTML = `<img src="${imagemBase64}">`;
+    };
+
+    if(file) reader.readAsDataURL(file);
+}
+
+function calcular(){
+    let nome=nomeEl.value;
+    let custo=parseFloat(custoEl.value)||0;
+    let frete=parseFloat(freteEl.value)||0;
+    let margem=parseFloat(margemEl.value)||0;
+    let desconto=parseFloat(descontoEl.value)||0;
+
+    let totalExtras=0;
+
+    document.querySelectorAll(".extra").forEach(e=>{
+        let v=parseFloat(e.children[1].value)||0;
+        let q=parseFloat(e.children[2].value)||0;
+        totalExtras+=v*q;
+    });
+
+    let total=custo+frete+totalExtras;
+    let final=total*(1+margem/100)*(1-desconto/100);
+    let lucro=final-total;
+
+    dados={nome,total,final,lucro};
+
+    resultado.innerHTML=`
+        <b>${nome}</b><br>
+        Preço: R$ ${final.toFixed(2)}<br>
+        Lucro: R$ ${lucro.toFixed(2)}
+    `;
+}
+
+async function gerarPDF(compartilhar){
+    const { jsPDF } = window.jspdf;
+    let doc=new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text("PRECIFICAÇÃO OTSA", 10, 10);
+
+    doc.setFontSize(12);
+    doc.text("Produto: "+dados.nome,10,20);
+    doc.text("Preço: R$ "+dados.final.toFixed(2),10,30);
+    doc.text("Lucro: R$ "+dados.lucro.toFixed(2),10,40);
+
+    doc.text("Aprovação: Este item deve ser aprovado pela maioria dos sócios.",10,60);
+
+    if(imagemBase64){
+        doc.addImage(imagemBase64, "JPEG", 10, 70, 50, 50);
+    }
+
+    if(compartilhar && navigator.share){
+        const blob = doc.output("blob");
+        const file = new File([blob], "precificacao.pdf", { type: "application/pdf" });
+
+        navigator.share({
+            files: [file],
+            title: "Precificação OTSA"
+        });
+    } else {
+        doc.save("precificacao_otsa.pdf");
+    }
+}
+
+const nomeEl = document.getElementById("nome");
+const custoEl = document.getElementById("custo");
+const margemEl = document.getElementById("margem");
+const freteEl = document.getElementById("frete");
+const descontoEl = document.getElementById("desconto");
+</script>
+
+</body>
+</html>
