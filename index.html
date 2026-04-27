@@ -1,12 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
 
 <meta charset="UTF-8">
-
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Precificação OTSA</title>
 
@@ -14,151 +11,79 @@ content="width=device-width, initial-scale=1.0">
 
 <style>
 
-* {
-box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
-
 font-family: Arial;
-
 background: #191917;
-
 color: #eeeae1;
-
 display: flex;
-
 justify-content: center;
-
 margin: 0;
-
 }
 
 .container {
-
 width: 100%;
-
 max-width: 500px;
-
 padding: 12px;
-
 }
 
 h2 {
-
 color: #79a1bc;
-
 text-align: center;
-
 }
 
 .card {
-
 background: #222220;
-
 padding: 12px;
-
 border-radius: 10px;
-
 margin-top: 12px;
-
 }
 
-input,
-select,
-textarea {
-
+input, select, textarea {
 width: 100%;
-
 padding: 12px;
-
 margin-top: 6px;
-
 border-radius: 6px;
-
 border: 1px solid #333;
-
 background: #191917;
-
 color: #eeeae1;
-
 font-size: 16px;
-
 }
 
-textarea {
-
-min-height: 80px;
-
-}
+textarea { min-height: 80px; }
 
 button {
-
 width: 100%;
-
 padding: 14px;
-
 margin-top: 6px;
-
 border-radius: 6px;
-
 border: none;
-
 font-weight: bold;
-
 cursor: pointer;
-
 font-size: 16px;
-
 }
 
-.primary {
-
-background: #79a1bc;
-
-color: #191917;
-
-}
-
-.secondary {
-
-background: #333;
-
-color: white;
-
-}
+.primary { background: #79a1bc; color: #191917; }
+.secondary { background: #333; color: white; }
 
 .extra {
-
 display: grid;
-
-grid-template-columns:
-1fr 70px 70px 35px;
-
+grid-template-columns: 1fr 70px 70px 35px;
 gap: 5px;
-
 margin-top: 6px;
-
 }
 
 .preview img {
-
 max-width: 100%;
-
 margin-top: 6px;
-
 border-radius: 8px;
-
 }
 
 .row {
-
 display: grid;
-
 grid-template-columns: 1fr 90px;
-
 gap: 5px;
-
 }
 
 </style>
@@ -171,119 +96,42 @@ gap: 5px;
 
 <h2>Precificação OTSA</h2>
 
-<!-- PRODUTO -->
-
 <div class="card">
-
-<input
-id="nome"
-placeholder="Nome do produto">
-
-<input
-id="custo"
-type="text"
-inputmode="decimal"
-placeholder="Custo (R$)">
-
-<input
-id="margem"
-type="text"
-inputmode="decimal"
-placeholder="Margem (%)">
-
-<input
-id="frete"
-type="text"
-inputmode="decimal"
-placeholder="Frete (R$)">
+<input id="nome" placeholder="Nome do produto">
+<input id="custo" type="text" inputmode="decimal" placeholder="Custo (R$)">
+<input id="margem" type="text" inputmode="decimal" placeholder="Margem (%)">
+<input id="frete" type="text" inputmode="decimal" placeholder="Frete (R$)">
 
 <div class="row">
-
-<input
-id="desconto"
-type="text"
-inputmode="decimal"
-placeholder="Desconto">
-
+<input id="desconto" type="text" inputmode="decimal" placeholder="Desconto">
 <select id="tipoDesconto">
-
 <option value="porcentagem">%</option>
-
 <option value="valor">R$</option>
-
 </select>
-
 </div>
-
 </div>
-
-<!-- EXTRAS -->
 
 <div class="card">
-
 <div id="extras"></div>
-
-<button
-class="secondary"
-onclick="addExtra()">
-
-+ Adicionar Extra
-
-</button>
-
+<button class="secondary" onclick="addExtra()">+ Adicionar Extra</button>
 </div>
 
-<!-- FOTOS -->
-
 <div class="card">
-
 <label>Fotos do produto</label>
-
-<input
-type="file"
-accept="image/*"
-multiple
-onchange="previewImagem(event)">
-
+<input type="file" accept="image/*" multiple onchange="previewImagem(event)">
 <div id="preview"></div>
-
 </div>
-
-<!-- OBS -->
 
 <div class="card">
-
-<textarea
-id="obs"
-placeholder="Observações"></textarea>
-
+<textarea id="obs" placeholder="Observações"></textarea>
 </div>
-
-<!-- BOTÕES -->
 
 <div class="card">
-
-<button
-class="primary"
-onclick="calcular()">
-
-Calcular
-
-</button>
-
-<button
-class="secondary"
-onclick="gerarPDF()">
-
-Gerar PDF Profissional
-
-</button>
-
+<button class="primary" onclick="calcular()">Calcular</button>
+<button class="secondary" onclick="gerarPDF()">Gerar PDF Profissional</button>
 </div>
 
-<div
-class="card"
-id="resultado"></div>
+<div class="card" id="resultado"></div>
 
 </div>
 
@@ -293,361 +141,178 @@ let imagens=[];
 let dados={};
 
 function parseValor(valor){
-
 if(!valor) return 0;
-
-valor=valor
-.replace(/\./g,"")
-.replace(",", ".");
-
+valor=valor.replace(/\./g,"").replace(",", ".");
 return parseFloat(valor)||0;
-
 }
 
 function addExtra(){
-
 let div=document.createElement("div");
-
 div.className="extra";
-
 div.innerHTML=`
-
 <input placeholder="Nome">
-
-<input
-type="text"
-inputmode="decimal"
-placeholder="R$">
-
-<input
-type="text"
-inputmode="numeric"
-placeholder="Qtd">
-
-<button
-onclick="this.parentElement.remove()">
-X
-</button>
-
+<input type="text" inputmode="decimal" placeholder="R$">
+<input type="text" inputmode="numeric" placeholder="Qtd">
+<button onclick="this.parentElement.remove()">X</button>
 `;
-
 extras.appendChild(div);
-
 }
 
 function previewImagem(event){
-
 let files=event.target.files;
-
 for(let i=0;i<files.length;i++){
-
 let reader=new FileReader();
-
 reader.onload=function(e){
-
 imagens.push(e.target.result);
-
 let img=document.createElement("img");
-
 img.src=e.target.result;
-
 preview.appendChild(img);
-
 };
-
 reader.readAsDataURL(files[i]);
-
 }
-
 }
 
 function calcular(){
 
 let nome=nomeEl.value;
-
-let custo=
-parseValor(custoEl.value);
-
-let frete=
-parseValor(freteEl.value);
-
-let margem=
-parseValor(margemEl.value);
-
-let desconto=
-parseValor(descontoEl.value);
-
-let tipoDesconto=
-document.getElementById(
-"tipoDesconto"
-).value;
+let custo=parseValor(custoEl.value);
+let frete=parseValor(freteEl.value);
+let margem=parseValor(margemEl.value);
+let desconto=parseValor(descontoEl.value);
+let tipoDesconto=document.getElementById("tipoDesconto").value;
 
 let totalExtras=0;
 
-document.querySelectorAll(".extra")
-.forEach(e=>{
-
-let v=
-parseValor(e.children[1].value);
-
-let q=
-parseValor(e.children[2].value);
-
+document.querySelectorAll(".extra").forEach(e=>{
+let v=parseValor(e.children[1].value);
+let q=parseValor(e.children[2].value);
 totalExtras+=v*q;
-
 });
 
-let total=
-custo+frete+totalExtras;
-
-let final=
-total*(1+margem/100);
+let total=custo+frete+totalExtras;
+let final=total*(1+margem/100);
 
 if(tipoDesconto==="porcentagem"){
-
-final=
-final*(1-desconto/100);
-
+final=final*(1-desconto/100);
 }else{
-
-final=
-final-desconto;
-
+final=final-desconto;
 }
 
-let lucro=
-final-total;
+let lucro=final-total;
 
-dados={
-nome,
-total,
-final,
-lucro
-};
+dados={nome,total,final,lucro};
 
 resultado.innerHTML=`
-
 <b>${nome}</b><br>
-
-Preço Final:
-R$ ${final.toFixed(2)}<br>
-
-Lucro:
-R$ ${lucro.toFixed(2)}
-
+Preço Final: R$ ${final.toFixed(2)}<br>
+Lucro: R$ ${lucro.toFixed(2)}
 `;
-
 }
 
 async function gerarPDF(){
 
 const { jsPDF }=window.jspdf;
-
 let doc=new jsPDF();
 
 let y=15;
 
+// HEADER
 doc.setFillColor(25,25,23);
-
 doc.rect(0,0,210,25,"F");
 
 doc.setTextColor(238,234,225);
-
 doc.setFontSize(16);
-
-doc.text(
-"PRECIFICAÇÃO OTSA",
-10,
-15
-);
+doc.text("PRECIFICAÇÃO OTSA",10,15);
 
 doc.setTextColor(0,0,0);
-
 y=35;
 
+// INFO
 doc.setFontSize(14);
-
-doc.text(
-"INFORMAÇÕES DO PRODUTO",
-10,
-y
-);
-
+doc.text("INFORMAÇÕES DO PRODUTO",10,y);
 y+=6;
 
 doc.rect(10,y,190,30);
-
 y+=8;
 
 doc.setFontSize(11);
-
-doc.text(
-"Produto: "+dados.nome,
-15,
-y
-);
-
+doc.text("Produto: "+dados.nome,15,y);
 y+=7;
-
-doc.text(
-"Custo Total: R$ "+
-dados.total.toFixed(2),
-15,
-y
-);
-
+doc.text("Custo Total: R$ "+dados.total.toFixed(2),15,y);
 y+=7;
-
-doc.text(
-"Preço Final: R$ "+
-dados.final.toFixed(2),
-15,
-y
-);
-
+doc.text("Preço Final: R$ "+dados.final.toFixed(2),15,y);
 y+=7;
-
-doc.text(
-"Lucro: R$ "+
-dados.lucro.toFixed(2),
-15,
-y
-);
+doc.text("Lucro: R$ "+dados.lucro.toFixed(2),15,y);
 
 y+=20;
 
+// OBS
 doc.setFontSize(14);
-
-doc.text(
-"OBSERVAÇÕES",
-10,
-y
-);
-
+doc.text("OBSERVAÇÕES",10,y);
 y+=5;
 
 doc.rect(10,y,190,30);
-
 y+=8;
 
-let obsTexto=
-document.getElementById("obs").value
-||"Nenhuma.";
-
+let obsTexto=document.getElementById("obs").value||"Nenhuma.";
 doc.setFontSize(11);
-
-doc.text(
-obsTexto,
-15,
-y,
-{maxWidth:180}
-);
+doc.text(obsTexto,15,y,{maxWidth:180});
 
 y+=40;
 
+// FOTOS
 doc.setFontSize(14);
-
-doc.text(
-"FOTOS DO PRODUTO",
-10,
-y
-);
-
+doc.text("FOTOS DO PRODUTO",10,y);
 y+=6;
 
 let x=10;
 
 for(let i=0;i<imagens.length;i++){
-
-doc.addImage(
-imagens[i],
-"JPEG",
-x,
-y,
-40,
-40
-);
-
+doc.addImage(imagens[i],"JPEG",x,y,40,40);
 x+=45;
 
 if(x>160){
-
 x=10;
 y+=45;
-
 }
-
 }
 
 y+=55;
 
+// ASSINATURAS MELHORADAS
 doc.setFontSize(14);
-
-doc.text(
-"APROVAÇÃO E ASSINATURAS",
-10,
-y
-);
-
-y+=10;
-
-doc.line(10,y,80,y);
-
-doc.text(
-"Sócio 1",
-10,
-y+5
-);
-
-doc.line(110,y,180,y);
-
-doc.text(
-"Sócio 2",
-110,
-y+5
-);
+doc.text("APROVAÇÃO E ASSINATURAS",10,y);
 
 y+=20;
 
-doc.line(10,y,80,y);
+// linha 1
+doc.line(15,y,75,y);
+doc.text("Sócio 1",15,y+6);
 
-doc.text(
-"Sócio 3",
-10,
-y+5
-);
+doc.line(120,y,180,y);
+doc.text("Sócio 2",120,y+6);
 
-doc.line(110,y,180,y);
+y+=30;
 
-doc.text(
-"Data",
-110,
-y+5
-);
+// linha 2
+doc.line(15,y,75,y);
+doc.text("Sócio 3",15,y+6);
 
-doc.save(
-"precificacao_profissional_otsa.pdf"
-);
+doc.line(120,y,180,y);
+doc.text("Data",120,y+6);
+
+// salvar
+doc.save("precificacao_profissional_otsa.pdf");
 
 }
 
-const nomeEl=
-document.getElementById("nome");
-
-const custoEl=
-document.getElementById("custo");
-
-const margemEl=
-document.getElementById("margem");
-
-const freteEl=
-document.getElementById("frete");
-
-const descontoEl=
-document.getElementById("desconto");
+const nomeEl=document.getElementById("nome");
+const custoEl=document.getElementById("custo");
+const margemEl=document.getElementById("margem");
+const freteEl=document.getElementById("frete");
+const descontoEl=document.getElementById("desconto");
 
 </script>
 
 </body>
-
 </html>
