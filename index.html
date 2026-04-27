@@ -181,29 +181,27 @@ placeholder="Nome do produto">
 
 <input
 id="custo"
-type="number"
+type="text"
 inputmode="decimal"
-step="0.01"
 placeholder="Custo (R$)">
 
 <input
 id="margem"
-type="number"
+type="text"
 inputmode="decimal"
 placeholder="Margem (%)">
 
 <input
 id="frete"
-type="number"
+type="text"
 inputmode="decimal"
-step="0.01"
 placeholder="Frete (R$)">
 
 <div class="row">
 
 <input
 id="desconto"
-type="number"
+type="text"
 inputmode="decimal"
 placeholder="Desconto">
 
@@ -245,7 +243,6 @@ onclick="addExtra()">
 type="file"
 accept="image/*"
 multiple
-capture="environment"
 onchange="previewImagem(event)">
 
 <div id="preview"></div>
@@ -293,8 +290,19 @@ id="resultado"></div>
 <script>
 
 let imagens=[];
-
 let dados={};
+
+function parseValor(valor){
+
+if(!valor) return 0;
+
+valor=valor
+.replace(/\./g,"")
+.replace(",", ".");
+
+return parseFloat(valor)||0;
+
+}
 
 function addExtra(){
 
@@ -307,13 +315,12 @@ div.innerHTML=`
 <input placeholder="Nome">
 
 <input
-type="number"
+type="text"
 inputmode="decimal"
-step="0.01"
 placeholder="R$">
 
 <input
-type="number"
+type="text"
 inputmode="numeric"
 placeholder="Qtd">
 
@@ -359,16 +366,16 @@ function calcular(){
 let nome=nomeEl.value;
 
 let custo=
-parseFloat(custoEl.value)||0;
+parseValor(custoEl.value);
 
 let frete=
-parseFloat(freteEl.value)||0;
+parseValor(freteEl.value);
 
 let margem=
-parseFloat(margemEl.value)||0;
+parseValor(margemEl.value);
 
 let desconto=
-parseFloat(descontoEl.value)||0;
+parseValor(descontoEl.value);
 
 let tipoDesconto=
 document.getElementById(
@@ -381,10 +388,10 @@ document.querySelectorAll(".extra")
 .forEach(e=>{
 
 let v=
-parseFloat(e.children[1].value)||0;
+parseValor(e.children[1].value);
 
 let q=
-parseFloat(e.children[2].value)||0;
+parseValor(e.children[2].value);
 
 totalExtras+=v*q;
 
@@ -440,8 +447,6 @@ let doc=new jsPDF();
 
 let y=15;
 
-//// CABEÇALHO
-
 doc.setFillColor(25,25,23);
 
 doc.rect(0,0,210,25,"F");
@@ -459,8 +464,6 @@ doc.text(
 doc.setTextColor(0,0,0);
 
 y=35;
-
-//// DADOS
 
 doc.setFontSize(14);
 
@@ -513,8 +516,6 @@ y
 
 y+=20;
 
-//// OBS
-
 doc.setFontSize(14);
 
 doc.text(
@@ -544,8 +545,6 @@ y,
 
 y+=40;
 
-//// FOTOS
-
 doc.setFontSize(14);
 
 doc.text(
@@ -574,7 +573,6 @@ x+=45;
 if(x>160){
 
 x=10;
-
 y+=45;
 
 }
@@ -582,8 +580,6 @@ y+=45;
 }
 
 y+=55;
-
-//// ASSINATURAS
 
 doc.setFontSize(14);
 
