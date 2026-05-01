@@ -5,12 +5,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Precificação OTSA</title>
+<title>Precificação OTSA PRO</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-
 * { box-sizing: border-box; }
 
 body {
@@ -28,10 +27,7 @@ max-width: 500px;
 padding: 12px;
 }
 
-h2 {
-color: #79a1bc;
-text-align: center;
-}
+h2 { color: #79a1bc; text-align: center; }
 
 .card {
 background: #222220;
@@ -51,8 +47,6 @@ color: #eeeae1;
 font-size: 16px;
 }
 
-textarea { min-height: 80px; }
-
 button {
 width: 100%;
 padding: 14px;
@@ -61,7 +55,6 @@ border-radius: 6px;
 border: none;
 font-weight: bold;
 cursor: pointer;
-font-size: 16px;
 }
 
 .primary { background: #79a1bc; color: #191917; }
@@ -75,7 +68,7 @@ margin-top: 6px;
 }
 
 .preview img {
-max-width: 100%;
+width: 100%;
 margin-top: 6px;
 border-radius: 8px;
 }
@@ -85,7 +78,6 @@ display: grid;
 grid-template-columns: 1fr 90px;
 gap: 5px;
 }
-
 </style>
 
 </head>
@@ -94,16 +86,18 @@ gap: 5px;
 
 <div class="container">
 
-<h2>Precificação OTSA</h2>
+<h2>Precificação OTSA PRO</h2>
 
 <div class="card">
-<input id="nome" placeholder="Nome do produto">
-<input id="custo" type="text" placeholder="Custo (R$)">
-<input id="margem" type="text" placeholder="Margem (%)">
-<input id="frete" type="text" placeholder="Frete (R$)">
+<input id="nome" placeholder="Produto">
+
+<input id="custoProducao" inputmode="decimal" type="number" placeholder="Custo Produção (R$)">
+<input id="custo" inputmode="decimal" type="number" placeholder="Outros Custos (R$)">
+<input id="frete" inputmode="decimal" type="number" placeholder="Frete (R$)">
+<input id="margem" inputmode="decimal" type="number" placeholder="Margem (%)">
 
 <div class="row">
-<input id="desconto" type="text" placeholder="Desconto">
+<input id="desconto" inputmode="decimal" type="number" placeholder="Desconto">
 <select id="tipoDesconto">
 <option value="porcentagem">%</option>
 <option value="valor">R$</option>
@@ -113,11 +107,10 @@ gap: 5px;
 
 <div class="card">
 <div id="extras"></div>
-<button class="secondary" onclick="addExtra()">+ Adicionar Extra</button>
+<button class="secondary" onclick="addExtra()">+ Extra</button>
 </div>
 
 <div class="card">
-<label>Fotos do produto</label>
 <input type="file" accept="image/*" multiple onchange="previewImagem(event)">
 <div id="preview"></div>
 </div>
@@ -128,7 +121,7 @@ gap: 5px;
 
 <div class="card">
 <button class="primary" onclick="calcular()">Calcular</button>
-<button class="secondary" onclick="gerarPDF()">Gerar PDF Profissional</button>
+<button class="secondary" onclick="gerarPDF()">Gerar PDF</button>
 </div>
 
 <div class="card" id="resultado"></div>
@@ -140,101 +133,61 @@ gap: 5px;
 let imagens=[];
 let dados={};
 
-function parseValor(valor){
-if(!valor) return 0;
-valor=valor.replace(/\./g,"").replace(",", ".");
-return parseFloat(valor)||0;
-}
+function parseValor(v){ return parseFloat(v)||0; }
 
 function addExtra(){
 let div=document.createElement("div");
 div.className="extra";
 div.innerHTML=`
 <input placeholder="Nome">
-<input type="text" placeholder="R$">
-<input type="text" placeholder="Qtd">
+<input type="number" inputmode="decimal" placeholder="R$">
+<input type="number" inputmode="numeric" placeholder="Qtd">
 <button onclick="this.parentElement.remove()">X</button>
 `;
 extras.appendChild(div);
 }
 
-function previewImagem(event){
-let files=event.target.files;
-for(let i=0;i<files.length;i++){
-let reader=new FileReader();
-reader.onload=function(e){
-imagens.push(e.target.result);
+function previewImagem(e){
+for(let file of e.target.files){
+let r=new FileReader();
+r.onload=ev=>{
+imagens.push(ev.target.result);
 let img=document.createElement("img");
-img.src=e.target.result;
+img.src=ev.target.result;
 preview.appendChild(img);
 };
-reader.readAsDataURL(files[i]);
+r.readAsDataURL(file);
 }
 }
 
 function calcular(){
 
-let nome=nomeEl.value;
-let custo=parseValor(custoEl.value);
-let frete=parseValor(freteEl.value);
-let margem=parseValor(margemEl.value);
-let desconto=parseValor(descontoEl.value);
-let tipoDesconto=document.getElementById("tipoDesconto").value;
+let custoProd=parseValor(custoProducao.value);
+let custo=parseValor(custo.value);
+let frete=parseValor(frete.value);
+let margem=parseValor(margem.value);
 
 let extrasLista=[];
 let totalExtras=0;
 
 document.querySelectorAll(".extra").forEach(e=>{
-let nomeExtra=e.children[0].value || "Extra";
-let valor=parseValor(e.children[1].value);
-let qtd=parseValor(e.children[2].value);
+let nome=e.children[0].value||"Extra";
+let v=parseValor(e.children[1].value);
+let q=parseValor(e.children[2].value);
+let sub=v*q;
 
-let subtotal=valor*qtd;
-
-if(subtotal>0){
-extrasLista.push({nome: nomeExtra, valor, qtd, subtotal});
-totalExtras+=subtotal;
+if(sub>0){
+extrasLista.push({nome,v,q,sub});
+totalExtras+=sub;
 }
 });
 
-let total=custo+frete+totalExtras;
+let total=custoProd+custo+frete+totalExtras;
 let precoBruto=total*(1+margem/100);
 
-let valorDesconto=0;
+dados={nome:nome.value,total,precoBruto,margem,extrasLista};
 
-if(tipoDesconto==="porcentagem"){
-valorDesconto=precoBruto*(desconto/100);
-}else{
-valorDesconto=desconto;
-}
-
-let final=precoBruto-valorDesconto;
-let lucro=final-total;
-let margemReal=(lucro/final)*100;
-
-dados={
-nome,
-custo,
-frete,
-extrasLista,
-totalExtras,
-total,
-margem,
-precoBruto,
-desconto,
-tipoDesconto,
-valorDesconto,
-final,
-lucro,
-margemReal
-};
-
-resultado.innerHTML=`
-<b>${nome}</b><br>
-Preço Final: R$ ${final.toFixed(2)}<br>
-Lucro: R$ ${lucro.toFixed(2)}<br>
-Margem Real: ${margemReal.toFixed(1)}%
-`;
+resultado.innerHTML=`Preço: R$ ${precoBruto.toFixed(2)}`;
 }
 
 async function gerarPDF(){
@@ -245,75 +198,49 @@ let doc=new jsPDF();
 let y=15;
 
 // HEADER
-doc.setFillColor(25,25,23);
-doc.rect(0,0,210,25,"F");
-
-doc.setTextColor(238,234,225);
-doc.setFontSize(16);
-doc.text("RELATÓRIO DE PRECIFICAÇÃO - OTSA",10,15);
-
-doc.setTextColor(0,0,0);
-y=35;
-
-// PRODUTO
-doc.setFontSize(14);
-doc.text("PRODUTO",10,y);
-y+=8;
-doc.setFontSize(11);
-doc.text("Nome: "+dados.nome,10,y);
+doc.setFontSize(18);
+doc.text("RELATÓRIO OTSA",10,y);
 y+=10;
 
-// CUSTOS
+// SEÇÃO CUSTOS
 doc.setFontSize(14);
 doc.text("CUSTOS",10,y);
 y+=6;
+
 doc.setFontSize(11);
-doc.text(`Custo base: R$ ${dados.custo.toFixed(2)}`,10,y); y+=6;
-doc.text(`Frete: R$ ${dados.frete.toFixed(2)}`,10,y); y+=6;
+doc.text(`Total: R$ ${dados.total.toFixed(2)}`,10,y);
+y+=8;
 
-doc.text("Extras:",10,y); y+=6;
-
-dados.extrasLista.forEach(e=>{
-doc.text(`${e.nome} (${e.qtd}x): R$ ${e.subtotal.toFixed(2)}`,12,y);
-y+=5;
-});
-
-doc.text(`Total Extras: R$ ${dados.totalExtras.toFixed(2)}`,10,y); y+=8;
-doc.text(`Custo Total: R$ ${dados.total.toFixed(2)}`,10,y); y+=10;
-
-// FORMAÇÃO DE PREÇO
+// SEÇÃO GRÁFICO (simulação)
 doc.setFontSize(14);
-doc.text("FORMAÇÃO DE PREÇO",10,y);
-y+=6;
+doc.text("SIMULAÇÃO DE MARGEM",10,y);
+y+=8;
 
-doc.setFontSize(11);
-doc.text(`Margem aplicada: ${dados.margem}%`,10,y); y+=6;
-doc.text(`Preço bruto: R$ ${dados.precoBruto.toFixed(2)}`,10,y); y+=6;
+let base=dados.total;
 
-doc.text(`Desconto (${dados.tipoDesconto}): R$ ${dados.valorDesconto.toFixed(2)}`,10,y); y+=6;
-
-doc.text(`Preço final: R$ ${dados.final.toFixed(2)}`,10,y); y+=6;
-doc.text(`Lucro: R$ ${dados.lucro.toFixed(2)}`,10,y); y+=6;
-doc.text(`Margem real: ${dados.margemReal.toFixed(1)}%`,10,y);
-
-y+=12;
-
-// OBS
-doc.setFontSize(14);
-doc.text("OBSERVAÇÕES",10,y);
-y+=6;
-
-doc.setFontSize(11);
-doc.text(document.getElementById("obs").value || "Nenhuma.",10,y,{maxWidth:180});
-
-doc.save("precificacao_otsa_profissional.pdf");
+for(let i=10;i<=dados.margem;i+=10){
+let preco=base*(1+i/100);
+doc.rect(10,y,preco/10,4); // gráfico simples
+doc.text(`${i}%`,10,y+6);
+y+=8;
 }
 
-const nomeEl=document.getElementById("nome");
-const custoEl=document.getElementById("custo");
-const margemEl=document.getElementById("margem");
-const freteEl=document.getElementById("frete");
-const descontoEl=document.getElementById("desconto");
+// IMAGENS GRANDES
+y+=5;
+doc.setFontSize(14);
+doc.text("IMAGENS",10,y);
+y+=8;
+
+let x=10;
+
+imagens.forEach(img=>{
+doc.addImage(img,"JPEG",x,y,80,80);
+x+=90;
+if(x>150){ x=10; y+=85; }
+});
+
+doc.save("OTSA_PRO.pdf");
+}
 
 </script>
 
