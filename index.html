@@ -91,13 +91,12 @@ gap: 5px;
 <div class="card">
 <input id="nome" placeholder="Produto">
 
-<input id="custoProducao" inputmode="decimal" type="number" placeholder="Custo Produção (R$)">
-<input id="custo" inputmode="decimal" type="number" placeholder="Outros Custos (R$)">
-<input id="frete" inputmode="decimal" type="number" placeholder="Frete (R$)">
-<input id="margem" inputmode="decimal" type="number" placeholder="Margem (%)">
+<input id="custoProducao" inputmode="decimal" placeholder="Custo Produção (R$)">
+<input id="frete" inputmode="decimal" placeholder="Frete (R$)">
+<input id="margem" inputmode="decimal" placeholder="Margem (%)">
 
 <div class="row">
-<input id="desconto" inputmode="decimal" type="number" placeholder="Desconto">
+<input id="desconto" inputmode="decimal" placeholder="Desconto">
 <select id="tipoDesconto">
 <option value="porcentagem">%</option>
 <option value="valor">R$</option>
@@ -133,15 +132,20 @@ gap: 5px;
 let imagens=[];
 let dados={};
 
-function parseValor(v){ return parseFloat(v)||0; }
+// ✅ TRATAMENTO DE VÍRGULA (BR)
+function parseValor(v){
+if(!v) return 0;
+v = v.replace(/\./g,"").replace(",",".");
+return parseFloat(v) || 0;
+}
 
 function addExtra(){
 let div=document.createElement("div");
 div.className="extra";
 div.innerHTML=`
 <input placeholder="Nome">
-<input type="number" inputmode="decimal" placeholder="R$">
-<input type="number" inputmode="numeric" placeholder="Qtd">
+<input inputmode="decimal" placeholder="R$">
+<input inputmode="numeric" placeholder="Qtd">
 <button onclick="this.parentElement.remove()">X</button>
 `;
 extras.appendChild(div);
@@ -163,7 +167,6 @@ r.readAsDataURL(file);
 function calcular(){
 
 let custoProd=parseValor(custoProducao.value);
-let custo=parseValor(custo.value);
 let frete=parseValor(frete.value);
 let margem=parseValor(margem.value);
 
@@ -182,12 +185,20 @@ totalExtras+=sub;
 }
 });
 
-let total=custoProd+custo+frete+totalExtras;
+let total=custoProd+frete+totalExtras;
 let precoBruto=total*(1+margem/100);
 
-dados={nome:nome.value,total,precoBruto,margem,extrasLista};
+dados={
+nome:nome.value,
+total,
+precoBruto,
+margem,
+extrasLista
+};
 
-resultado.innerHTML=`Preço: R$ ${precoBruto.toFixed(2)}`;
+resultado.innerHTML=`
+Preço: R$ ${precoBruto.toFixed(2)}
+`;
 }
 
 async function gerarPDF(){
@@ -197,38 +208,34 @@ let doc=new jsPDF();
 
 let y=15;
 
-// HEADER
 doc.setFontSize(18);
 doc.text("RELATÓRIO OTSA",10,y);
 y+=10;
 
-// SEÇÃO CUSTOS
-doc.setFontSize(14);
-doc.text("CUSTOS",10,y);
+doc.setFontSize(12);
+doc.text(`Produto: ${dados.nome}`,10,y);
+y+=8;
+
+doc.text(`Custo Total: R$ ${dados.total.toFixed(2)}`,10,y);
 y+=6;
 
-doc.setFontSize(11);
-doc.text(`Total: R$ ${dados.total.toFixed(2)}`,10,y);
-y+=8;
+doc.text(`Preço Final: R$ ${dados.precoBruto.toFixed(2)}`,10,y);
+y+=10;
 
-// SEÇÃO GRÁFICO (simulação)
-doc.setFontSize(14);
-doc.text("SIMULAÇÃO DE MARGEM",10,y);
-y+=8;
-
-let base=dados.total;
+// GRÁFICO
+doc.text("Simulação de Margem",10,y);
+y+=6;
 
 for(let i=10;i<=dados.margem;i+=10){
-let preco=base*(1+i/100);
-doc.rect(10,y,preco/10,4); // gráfico simples
+let preco=dados.total*(1+i/100);
+doc.rect(10,y,preco/10,4);
 doc.text(`${i}%`,10,y+6);
 y+=8;
 }
 
 // IMAGENS GRANDES
 y+=5;
-doc.setFontSize(14);
-doc.text("IMAGENS",10,y);
+doc.text("Imagens",10,y);
 y+=8;
 
 let x=10;
