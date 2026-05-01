@@ -98,12 +98,12 @@ gap: 5px;
 
 <div class="card">
 <input id="nome" placeholder="Nome do produto">
-<input id="custo" type="text" inputmode="decimal" placeholder="Custo (R$)">
-<input id="margem" type="text" inputmode="decimal" placeholder="Margem (%)">
-<input id="frete" type="text" inputmode="decimal" placeholder="Frete (R$)">
+<input id="custo" type="text" placeholder="Custo (R$)">
+<input id="margem" type="text" placeholder="Margem (%)">
+<input id="frete" type="text" placeholder="Frete (R$)">
 
 <div class="row">
-<input id="desconto" type="text" inputmode="decimal" placeholder="Desconto">
+<input id="desconto" type="text" placeholder="Desconto">
 <select id="tipoDesconto">
 <option value="porcentagem">%</option>
 <option value="valor">R$</option>
@@ -151,8 +151,8 @@ let div=document.createElement("div");
 div.className="extra";
 div.innerHTML=`
 <input placeholder="Nome">
-<input type="text" inputmode="decimal" placeholder="R$">
-<input type="text" inputmode="numeric" placeholder="Qtd">
+<input type="text" placeholder="R$">
+<input type="text" placeholder="Qtd">
 <button onclick="this.parentElement.remove()">X</button>
 `;
 extras.appendChild(div);
@@ -181,31 +181,59 @@ let margem=parseValor(margemEl.value);
 let desconto=parseValor(descontoEl.value);
 let tipoDesconto=document.getElementById("tipoDesconto").value;
 
+let extrasLista=[];
 let totalExtras=0;
 
 document.querySelectorAll(".extra").forEach(e=>{
-let v=parseValor(e.children[1].value);
-let q=parseValor(e.children[2].value);
-totalExtras+=v*q;
+let nomeExtra=e.children[0].value || "Extra";
+let valor=parseValor(e.children[1].value);
+let qtd=parseValor(e.children[2].value);
+
+let subtotal=valor*qtd;
+
+if(subtotal>0){
+extrasLista.push({nome: nomeExtra, valor, qtd, subtotal});
+totalExtras+=subtotal;
+}
 });
 
 let total=custo+frete+totalExtras;
-let final=total*(1+margem/100);
+let precoBruto=total*(1+margem/100);
+
+let valorDesconto=0;
 
 if(tipoDesconto==="porcentagem"){
-final=final*(1-desconto/100);
+valorDesconto=precoBruto*(desconto/100);
 }else{
-final=final-desconto;
+valorDesconto=desconto;
 }
 
+let final=precoBruto-valorDesconto;
 let lucro=final-total;
+let margemReal=(lucro/final)*100;
 
-dados={nome,total,final,lucro};
+dados={
+nome,
+custo,
+frete,
+extrasLista,
+totalExtras,
+total,
+margem,
+precoBruto,
+desconto,
+tipoDesconto,
+valorDesconto,
+final,
+lucro,
+margemReal
+};
 
 resultado.innerHTML=`
 <b>${nome}</b><br>
 Preço Final: R$ ${final.toFixed(2)}<br>
-Lucro: R$ ${lucro.toFixed(2)}
+Lucro: R$ ${lucro.toFixed(2)}<br>
+Margem Real: ${margemReal.toFixed(1)}%
 `;
 }
 
@@ -222,88 +250,63 @@ doc.rect(0,0,210,25,"F");
 
 doc.setTextColor(238,234,225);
 doc.setFontSize(16);
-doc.text("PRECIFICAÇÃO OTSA",10,15);
+doc.text("RELATÓRIO DE PRECIFICAÇÃO - OTSA",10,15);
 
 doc.setTextColor(0,0,0);
 y=35;
 
-// INFO
+// PRODUTO
 doc.setFontSize(14);
-doc.text("INFORMAÇÕES DO PRODUTO",10,y);
+doc.text("PRODUTO",10,y);
+y+=8;
+doc.setFontSize(11);
+doc.text("Nome: "+dados.nome,10,y);
+y+=10;
+
+// CUSTOS
+doc.setFontSize(14);
+doc.text("CUSTOS",10,y);
+y+=6;
+doc.setFontSize(11);
+doc.text(`Custo base: R$ ${dados.custo.toFixed(2)}`,10,y); y+=6;
+doc.text(`Frete: R$ ${dados.frete.toFixed(2)}`,10,y); y+=6;
+
+doc.text("Extras:",10,y); y+=6;
+
+dados.extrasLista.forEach(e=>{
+doc.text(`${e.nome} (${e.qtd}x): R$ ${e.subtotal.toFixed(2)}`,12,y);
+y+=5;
+});
+
+doc.text(`Total Extras: R$ ${dados.totalExtras.toFixed(2)}`,10,y); y+=8;
+doc.text(`Custo Total: R$ ${dados.total.toFixed(2)}`,10,y); y+=10;
+
+// FORMAÇÃO DE PREÇO
+doc.setFontSize(14);
+doc.text("FORMAÇÃO DE PREÇO",10,y);
 y+=6;
 
-doc.rect(10,y,190,30);
-y+=8;
-
 doc.setFontSize(11);
-doc.text("Produto: "+dados.nome,15,y);
-y+=7;
-doc.text("Custo Total: R$ "+dados.total.toFixed(2),15,y);
-y+=7;
-doc.text("Preço Final: R$ "+dados.final.toFixed(2),15,y);
-y+=7;
-doc.text("Lucro: R$ "+dados.lucro.toFixed(2),15,y);
+doc.text(`Margem aplicada: ${dados.margem}%`,10,y); y+=6;
+doc.text(`Preço bruto: R$ ${dados.precoBruto.toFixed(2)}`,10,y); y+=6;
 
-y+=20;
+doc.text(`Desconto (${dados.tipoDesconto}): R$ ${dados.valorDesconto.toFixed(2)}`,10,y); y+=6;
+
+doc.text(`Preço final: R$ ${dados.final.toFixed(2)}`,10,y); y+=6;
+doc.text(`Lucro: R$ ${dados.lucro.toFixed(2)}`,10,y); y+=6;
+doc.text(`Margem real: ${dados.margemReal.toFixed(1)}%`,10,y);
+
+y+=12;
 
 // OBS
 doc.setFontSize(14);
 doc.text("OBSERVAÇÕES",10,y);
-y+=5;
-
-doc.rect(10,y,190,30);
-y+=8;
-
-let obsTexto=document.getElementById("obs").value||"Nenhuma.";
-doc.setFontSize(11);
-doc.text(obsTexto,15,y,{maxWidth:180});
-
-y+=40;
-
-// FOTOS
-doc.setFontSize(14);
-doc.text("FOTOS DO PRODUTO",10,y);
 y+=6;
 
-let x=10;
+doc.setFontSize(11);
+doc.text(document.getElementById("obs").value || "Nenhuma.",10,y,{maxWidth:180});
 
-for(let i=0;i<imagens.length;i++){
-doc.addImage(imagens[i],"JPEG",x,y,40,40);
-x+=45;
-
-if(x>160){
-x=10;
-y+=45;
-}
-}
-
-y+=55;
-
-// ASSINATURAS MELHORADAS
-doc.setFontSize(14);
-doc.text("APROVAÇÃO E ASSINATURAS",10,y);
-
-y+=20;
-
-// linha 1
-doc.line(15,y,75,y);
-doc.text("Sócio 1",15,y+6);
-
-doc.line(120,y,180,y);
-doc.text("Sócio 2",120,y+6);
-
-y+=30;
-
-// linha 2
-doc.line(15,y,75,y);
-doc.text("Sócio 3",15,y+6);
-
-doc.line(120,y,180,y);
-doc.text("Data",120,y+6);
-
-// salvar
-doc.save("precificacao_profissional_otsa.pdf");
-
+doc.save("precificacao_otsa_profissional.pdf");
 }
 
 const nomeEl=document.getElementById("nome");
