@@ -106,11 +106,11 @@ gap: 5px;
 
 <div class="card">
 <div id="extras"></div>
-<button class="secondary" onclick="addExtra()">+ Extra</button>
+<button class="secondary" id="btnExtra">+ Extra</button>
 </div>
 
 <div class="card">
-<input type="file" accept="image/*" multiple onchange="previewImagem(event)">
+<input type="file" accept="image/*" multiple id="inputImg">
 <div id="preview"></div>
 </div>
 
@@ -119,8 +119,8 @@ gap: 5px;
 </div>
 
 <div class="card">
-<button class="primary" onclick="calcular()">Calcular</button>
-<button class="secondary" onclick="gerarPDF()">Gerar PDF</button>
+<button class="primary" id="btnCalc">Calcular</button>
+<button class="secondary" id="btnPdf">Gerar PDF</button>
 </div>
 
 <div class="card" id="resultado"></div>
@@ -129,103 +129,116 @@ gap: 5px;
 
 <script>
 
-let imagens=[];
-let dados={};
+// DOM
+const nomeEl = document.getElementById("nome");
+const custoProdEl = document.getElementById("custoProducao");
+const freteEl = document.getElementById("frete");
+const margemEl = document.getElementById("margem");
+const descontoEl = document.getElementById("desconto");
+const tipoDescEl = document.getElementById("tipoDesconto");
 
-// ✅ TRATAMENTO DE VÍRGULA (BR)
+const extrasEl = document.getElementById("extras");
+const previewEl = document.getElementById("preview");
+const inputImg = document.getElementById("inputImg");
+
+const resultadoEl = document.getElementById("resultado");
+
+const btnCalc = document.getElementById("btnCalc");
+const btnPdf = document.getElementById("btnPdf");
+const btnExtra = document.getElementById("btnExtra");
+
+// DATA
+let imagens = [];
+let dados = {};
+
+// PARSE BR
 function parseValor(v){
 if(!v) return 0;
 v = v.replace(/\./g,"").replace(",",".");
 return parseFloat(v) || 0;
 }
 
-function addExtra(){
-let div=document.createElement("div");
+// ADD EXTRA
+btnExtra.onclick = () => {
+let div = document.createElement("div");
 div.className="extra";
 div.innerHTML=`
 <input placeholder="Nome">
 <input inputmode="decimal" placeholder="R$">
 <input inputmode="numeric" placeholder="Qtd">
-<button onclick="this.parentElement.remove()">X</button>
+<button>X</button>
 `;
-extras.appendChild(div);
-}
+div.querySelector("button").onclick = () => div.remove();
+extrasEl.appendChild(div);
+};
 
-function previewImagem(e){
+// IMG
+inputImg.onchange = (e)=>{
 for(let file of e.target.files){
-let r=new FileReader();
-r.onload=ev=>{
+let r = new FileReader();
+r.onload = ev=>{
 imagens.push(ev.target.result);
 let img=document.createElement("img");
 img.src=ev.target.result;
-preview.appendChild(img);
+previewEl.appendChild(img);
 };
 r.readAsDataURL(file);
 }
-}
+};
 
-function calcular(){
+// CALCULAR
+btnCalc.onclick = ()=>{
 
-let custoProd=parseValor(custoProducao.value);
-let frete=parseValor(frete.value);
-let margem=parseValor(margem.value);
+let custoProd = parseValor(custoProdEl.value);
+let frete = parseValor(freteEl.value);
+let margem = parseValor(margemEl.value);
 
-let extrasLista=[];
 let totalExtras=0;
 
 document.querySelectorAll(".extra").forEach(e=>{
-let nome=e.children[0].value||"Extra";
 let v=parseValor(e.children[1].value);
 let q=parseValor(e.children[2].value);
-let sub=v*q;
-
-if(sub>0){
-extrasLista.push({nome,v,q,sub});
-totalExtras+=sub;
-}
+totalExtras += v*q;
 });
 
-let total=custoProd+frete+totalExtras;
-let precoBruto=total*(1+margem/100);
+let total = custoProd + frete + totalExtras;
+let final = total * (1 + margem/100);
 
-dados={
-nome:nome.value,
+dados = {
+nome: nomeEl.value,
 total,
-precoBruto,
-margem,
-extrasLista
+final,
+margem
 };
 
-resultado.innerHTML=`
-Preço: R$ ${precoBruto.toFixed(2)}
+resultadoEl.innerHTML = `
+Preço Final: R$ ${final.toFixed(2)}
 `;
+};
+
+// PDF
+btnPdf.onclick = ()=>{
+
+if(!dados.final){
+alert("Calcule primeiro!");
+return;
 }
 
-async function gerarPDF(){
+const { jsPDF } = window.jspdf;
+let doc = new jsPDF();
 
-const { jsPDF }=window.jspdf;
-let doc=new jsPDF();
+let y=20;
 
-let y=15;
-
-doc.setFontSize(18);
+doc.setFontSize(16);
 doc.text("RELATÓRIO OTSA",10,y);
 y+=10;
 
 doc.setFontSize(12);
-doc.text(`Produto: ${dados.nome}`,10,y);
-y+=8;
+doc.text(`Produto: ${dados.nome}`,10,y); y+=6;
+doc.text(`Custo: R$ ${dados.total.toFixed(2)}`,10,y); y+=6;
+doc.text(`Preço: R$ ${dados.final.toFixed(2)}`,10,y); y+=10;
 
-doc.text(`Custo Total: R$ ${dados.total.toFixed(2)}`,10,y);
-y+=6;
-
-doc.text(`Preço Final: R$ ${dados.precoBruto.toFixed(2)}`,10,y);
-y+=10;
-
-// GRÁFICO
-doc.text("Simulação de Margem",10,y);
-y+=6;
-
+// gráfico simples
 for(let i=10;i<=dados.margem;i+=10){
 let preco=dados.total*(1+i/100);
 doc.rect(10,y,preco/10,4);
@@ -233,12 +246,9 @@ doc.text(`${i}%`,10,y+6);
 y+=8;
 }
 
-// IMAGENS GRANDES
-y+=5;
-doc.text("Imagens",10,y);
-y+=8;
-
+// imagens grandes
 let x=10;
+y+=10;
 
 imagens.forEach(img=>{
 doc.addImage(img,"JPEG",x,y,80,80);
@@ -247,9 +257,9 @@ if(x>150){ x=10; y+=85; }
 });
 
 doc.save("OTSA_PRO.pdf");
-}
+};
 
 </script>
 
 </body>
-</html>
+</html>o
