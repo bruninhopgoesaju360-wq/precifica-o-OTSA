@@ -1,102 +1,108 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Precificação OTSA </title>
-
+<title>Precificação OTSA PRO</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 * { box-sizing: border-box; }
 
 body {
-font-family: Arial;
-background: #191917;
-color: #eeeae1;
-display: flex;
-justify-content: center;
-margin: 0;
+  font-family: Arial;
+  background: #191917;
+  color: #eeeae1;
+  display: flex;
+  justify-content: center;
+  margin: 0;
 }
 
 .container {
-width: 100%;
-max-width: 500px;
-padding: 12px;
+  width: 100%;
+  max-width: 500px;
+  padding: 12px;
 }
 
 h2 { color: #79a1bc; text-align: center; }
 
 .card {
-background: #222220;
-padding: 12px;
-border-radius: 10px;
-margin-top: 12px;
+  background: #222220;
+  padding: 12px;
+  border-radius: 10px;
+  margin-top: 12px;
 }
 
 input, select, textarea {
-width: 100%;
-padding: 12px;
-margin-top: 6px;
-border-radius: 6px;
-border: 1px solid #333;
-background: #191917;
-color: #eeeae1;
-font-size: 16px;
+  width: 100%;
+  padding: 12px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #191917;
+  color: #eeeae1;
+  font-size: 16px;
 }
 
 button {
-width: 100%;
-padding: 14px;
-margin-top: 6px;
-border-radius: 6px;
-border: none;
-font-weight: bold;
-cursor: pointer;
+  width: 100%;
+  padding: 14px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
 }
 
 .primary { background: #79a1bc; color: #191917; }
 .secondary { background: #333; color: white; }
 
 .extra {
-display: grid;
-grid-template-columns: 1fr 70px 70px 35px;
-gap: 5px;
-margin-top: 6px;
+  display: grid;
+  grid-template-columns: 1fr 70px 70px 35px;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.preview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
 }
 
 .preview img {
-width: 100%;
-margin-top: 6px;
-border-radius: 8px;
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
 .row {
-display: grid;
-grid-template-columns: 1fr 90px;
-gap: 5px;
+  display: grid;
+  grid-template-columns: 1fr 90px;
+  gap: 5px;
 }
-</style>
 
+.resultado-item {
+  margin-bottom: 6px;
+}
+
+</style>
 </head>
 
 <body>
-
 <div class="container">
 
 <h2>Precificação OTSA PRO</h2>
 
 <div class="card">
 <input id="nome" placeholder="Produto">
-
-<input id="custoProducao" inputmode="decimal" placeholder="Custo Produção (R$)">
-<input id="frete" inputmode="decimal" placeholder="Frete (R$)">
-<input id="margem" inputmode="decimal" placeholder="Margem (%)">
+<input id="custoProducao" placeholder="Custo Produção (R$)">
+<input id="frete" placeholder="Frete (R$)">
+<input id="margem" placeholder="Margem (%)">
 
 <div class="row">
-<input id="desconto" inputmode="decimal" placeholder="Desconto">
+<input id="desconto" placeholder="Desconto">
 <select id="tipoDesconto">
 <option value="porcentagem">%</option>
 <option value="valor">R$</option>
@@ -111,7 +117,7 @@ gap: 5px;
 
 <div class="card">
 <input type="file" accept="image/*" multiple id="inputImg">
-<div id="preview"></div>
+<div class="preview" id="preview"></div>
 </div>
 
 <div class="card">
@@ -128,138 +134,129 @@ gap: 5px;
 </div>
 
 <script>
-
-// DOM
 const nomeEl = document.getElementById("nome");
 const custoProdEl = document.getElementById("custoProducao");
 const freteEl = document.getElementById("frete");
 const margemEl = document.getElementById("margem");
 const descontoEl = document.getElementById("desconto");
 const tipoDescEl = document.getElementById("tipoDesconto");
-
 const extrasEl = document.getElementById("extras");
 const previewEl = document.getElementById("preview");
 const inputImg = document.getElementById("inputImg");
-
 const resultadoEl = document.getElementById("resultado");
-
 const btnCalc = document.getElementById("btnCalc");
 const btnPdf = document.getElementById("btnPdf");
 const btnExtra = document.getElementById("btnExtra");
 
-// DATA
 let imagens = [];
 let dados = {};
 
-// PARSE BR
 function parseValor(v){
-if(!v) return 0;
-v = v.replace(/\./g,"").replace(",",".");
-return parseFloat(v) || 0;
+  if(!v) return 0;
+  v = v.replace(/\./g,"").replace(",",".");
+  return parseFloat(v) || 0;
 }
 
-// ADD EXTRA
 btnExtra.onclick = () => {
-let div = document.createElement("div");
-div.className="extra";
-div.innerHTML=`
-<input placeholder="Nome">
-<input inputmode="decimal" placeholder="R$">
-<input inputmode="numeric" placeholder="Qtd">
-<button>X</button>
-`;
-div.querySelector("button").onclick = () => div.remove();
-extrasEl.appendChild(div);
+  let div = document.createElement("div");
+  div.className="extra";
+  div.innerHTML=`
+  <input placeholder="Nome">
+  <input placeholder="R$">
+  <input placeholder="Qtd">
+  <button>X</button>`;
+  div.querySelector("button").onclick = () => div.remove();
+  extrasEl.appendChild(div);
 };
 
-// IMG
 inputImg.onchange = (e)=>{
-for(let file of e.target.files){
-let r = new FileReader();
-r.onload = ev=>{
-imagens.push(ev.target.result);
-let img=document.createElement("img");
-img.src=ev.target.result;
-previewEl.appendChild(img);
-};
-r.readAsDataURL(file);
-}
+  imagens = [];
+  previewEl.innerHTML = "";
+
+  for(let file of e.target.files){
+    let r = new FileReader();
+    r.onload = ev=>{
+      imagens.push(ev.target.result);
+      let img=document.createElement("img");
+      img.src=ev.target.result;
+      previewEl.appendChild(img);
+    };
+    r.readAsDataURL(file);
+  }
 };
 
-// CALCULAR
 btnCalc.onclick = ()=>{
+  let custoProd = parseValor(custoProdEl.value);
+  let frete = parseValor(freteEl.value);
+  let margem = parseValor(margemEl.value);
+  let desconto = parseValor(descontoEl.value);
 
-let custoProd = parseValor(custoProdEl.value);
-let frete = parseValor(freteEl.value);
-let margem = parseValor(margemEl.value);
+  let totalExtras=0;
+  document.querySelectorAll(".extra").forEach(e=>{
+    let v=parseValor(e.children[1].value);
+    let q=parseValor(e.children[2].value);
+    totalExtras += v*q;
+  });
 
-let totalExtras=0;
+  let custoTotal = custoProd + frete + totalExtras;
+  let precoBruto = custoTotal * (1 + margem/100);
 
-document.querySelectorAll(".extra").forEach(e=>{
-let v=parseValor(e.children[1].value);
-let q=parseValor(e.children[2].value);
-totalExtras += v*q;
-});
+  let precoFinal = precoBruto;
+  if(tipoDescEl.value === "porcentagem"){
+    precoFinal -= precoBruto * (desconto/100);
+  } else {
+    precoFinal -= desconto;
+  }
 
-let total = custoProd + frete + totalExtras;
-let final = total * (1 + margem/100);
+  let lucro = precoFinal - custoTotal;
 
-dados = {
-nome: nomeEl.value,
-total,
-final,
-margem
+  dados = {
+    nome: nomeEl.value,
+    custoTotal,
+    precoFinal,
+    lucro,
+    margem
+  };
+
+  resultadoEl.innerHTML = `
+    <div class="resultado-item">Custo Total: R$ ${custoTotal.toFixed(2)}</div>
+    <div class="resultado-item">Preço Final: R$ ${precoFinal.toFixed(2)}</div>
+    <div class="resultado-item">Lucro: R$ ${lucro.toFixed(2)}</div>
+    <div class="resultado-item">Margem: ${margem}%</div>
+  `;
 };
 
-resultadoEl.innerHTML = `
-Preço Final: R$ ${final.toFixed(2)}
-`;
-};
-
-// PDF
 btnPdf.onclick = ()=>{
+  if(!dados.precoFinal){
+    alert("Calcule primeiro!");
+    return;
+  }
 
-if(!dados.final){
-alert("Calcule primeiro!");
-return;
-}
+  const { jsPDF } = window.jspdf;
+  let doc = new jsPDF();
 
-const { jsPDF } = window.jspdf;
-let doc = new jsPDF();
+  let y=20;
 
-let y=20;
+  doc.setFontSize(16);
+  doc.text("RELATÓRIO OTSA",10,y);
+  y+=10;
 
-doc.setFontSize(16);
-doc.text("RELATÓRIO OTSA",10,y);
-y+=10;
+  doc.setFontSize(12);
+  doc.text(`Produto: ${dados.nome}`,10,y); y+=6;
+  doc.text(`Custo Total: R$ ${dados.custoTotal.toFixed(2)}`,10,y); y+=6;
+  doc.text(`Preço Final: R$ ${dados.precoFinal.toFixed(2)}`,10,y); y+=6;
+  doc.text(`Lucro: R$ ${dados.lucro.toFixed(2)}`,10,y); y+=10;
 
-doc.setFontSize(12);
-doc.text(`Produto: ${dados.nome}`,10,y); y+=6;
-doc.text(`Custo: R$ ${dados.total.toFixed(2)}`,10,y); y+=6;
-doc.text(`Preço: R$ ${dados.final.toFixed(2)}`,10,y); y+=10;
+  let x=10;
+  imagens.forEach(img=>{
+    doc.addImage(img,"JPEG",x,y,60,60);
+    x+=70;
+    if(x>150){ x=10; y+=65; }
+  });
 
-// gráfico simples
-for(let i=10;i<=dados.margem;i+=10){
-let preco=dados.total*(1+i/100);
-doc.rect(10,y,preco/10,4);
-doc.text(`${i}%`,10,y+6);
-y+=8;
-}
-
-// imagens grandes
-let x=10;
-y+=10;
-
-imagens.forEach(img=>{
-doc.addImage(img,"JPEG",x,y,80,80);
-x+=90;
-if(x>150){ x=10; y+=85; }
-});
-
-doc.save("OTSA_PRO.pdf");
+  doc.save("OTSA_PRO.pdf");
 };
 
 </script>
-
 </body>
-</html>o
+</html>
