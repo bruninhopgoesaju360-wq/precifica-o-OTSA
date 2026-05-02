@@ -97,12 +97,12 @@ button {
 
 <div class="card">
 <input id="nome" placeholder="Produto">
-<input id="custoProducao" placeholder="Custo Produção (R$)">
-<input id="frete" placeholder="Frete (R$)">
-<input id="margem" placeholder="Margem (%)">
+<input id="custoProducao" inputmode="decimal" pattern="[0-9]*[,.]?[0-9]*" placeholder="Custo Produção (R$)">
+<input id="frete" inputmode="decimal" pattern="[0-9]*[,.]?[0-9]*" placeholder="Frete (R$)">
+<input id="margem" inputmode="decimal" pattern="[0-9]*[,.]?[0-9]*" placeholder="Margem (%)">
 
 <div class="row">
-<input id="desconto" placeholder="Desconto">
+<input id="desconto" inputmode="decimal" pattern="[0-9]*[,.]?[0-9]*" placeholder="Desconto">
 <select id="tipoDesconto">
 <option value="porcentagem">%</option>
 <option value="valor">R$</option>
@@ -162,8 +162,8 @@ btnExtra.onclick = () => {
   div.className="extra";
   div.innerHTML=`
   <input placeholder="Nome">
-  <input placeholder="R$">
-  <input placeholder="Qtd">
+  <input inputmode="decimal" pattern="[0-9]*[,.]?[0-9]*" placeholder="R$">
+  <input inputmode="numeric" pattern="[0-9]*" placeholder="Qtd">
   <button>X</button>`;
   div.querySelector("button").onclick = () => div.remove();
   extrasEl.appendChild(div);
