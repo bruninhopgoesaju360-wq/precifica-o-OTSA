@@ -237,22 +237,76 @@ btnPdf.onclick = ()=>{
 
   let y=20;
 
-  doc.setFontSize(16);
-  doc.text("RELATÓRIO OTSA",10,y);
+  // DATA
+  const dataAtual = new Date().toLocaleString('pt-BR');
+
+  // TÍTULO (imagem será adicionada futuramente)
+  doc.setFont("helvetica","bold");
+  doc.setFontSize(18);
+  doc.text("RELATÓRIO OTSA",105,y,{align:"center"});
   y+=10;
 
-  doc.setFontSize(12);
-  doc.text(`Produto: ${dados.nome}`,10,y); y+=6;
-  doc.text(`Custo Total: R$ ${dados.custoTotal.toFixed(2)}`,10,y); y+=6;
-  doc.text(`Preço Final: R$ ${dados.precoFinal.toFixed(2)}`,10,y); y+=6;
-  doc.text(`Lucro: R$ ${dados.lucro.toFixed(2)}`,10,y); y+=10;
+  doc.setFontSize(10);
+  doc.setFont("helvetica","normal");
+  doc.text(`Emitido em: ${dataAtual}`,10,y);
+  y+=8;
 
-  let x=10;
-  imagens.forEach(img=>{
-    doc.addImage(img,"JPEG",x,y,60,60);
-    x+=70;
-    if(x>150){ x=10; y+=65; }
+  // PRODUTO
+  doc.setFont("helvetica","bold");
+  doc.text("INFORMAÇÕES DO PRODUTO",10,y);
+  y+=6;
+
+  doc.setFont("helvetica","normal");
+  doc.text(`Produto: ${dados.nome}`,10,y); y+=6;
+
+  // CUSTOS
+  doc.setFont("helvetica","bold");
+  doc.text("CUSTOS",10,y);
+  y+=6;
+
+  doc.setFont("helvetica","normal");
+  doc.text(`Custo Total: R$ ${dados.custoTotal.toFixed(2)}`,10,y); y+=6;
+
+  // RESULTADO
+  doc.setFont("helvetica","bold");
+  doc.text("RESULTADO",10,y);
+  y+=6;
+
+  doc.setFont("helvetica","normal");
+  doc.text(`Preço Final: R$ ${dados.precoFinal.toFixed(2)}`,10,y); y+=6;
+  doc.text(`Lucro: R$ ${dados.lucro.toFixed(2)}`,10,y); y+=6;
+  doc.text(`Margem: ${dados.margem}%`,10,y); y+=10;
+
+  // EXTRAS
+  doc.setFont("helvetica","bold");
+  doc.text("EXTRAS",10,y);
+  y+=6;
+
+  doc.setFont("helvetica","normal");
+
+  document.querySelectorAll(".extra").forEach(e=>{
+    let nome = e.children[0].value || "Extra";
+    let v = parseValor(e.children[1].value);
+    let q = parseValor(e.children[2].value);
+    let total = v*q;
+
+    doc.text(`${nome} | R$ ${v.toFixed(2)} x ${q} = R$ ${total.toFixed(2)}`,10,y);
+    y+=6;
   });
+
+  y+=5;
+
+  // IMAGENS
+  if(imagens.length === 1){
+    doc.addImage(imagens[0],"JPEG",35,y,140,100);
+  } else if(imagens.length > 1){
+    let x=10;
+    imagens.forEach(img=>{
+      doc.addImage(img,"JPEG",x,y,60,60);
+      x+=70;
+      if(x>150){ x=10; y+=65; }
+    });
+  }
 
   doc.save("OTSA_PRO.pdf");
 };
