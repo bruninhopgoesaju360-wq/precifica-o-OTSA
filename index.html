@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!<!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
@@ -86,7 +86,6 @@ button {
 .resultado-item {
   margin-bottom: 6px;
 }
-
 </style>
 </head>
 
@@ -97,12 +96,12 @@ button {
 
 <div class="card">
 <input id="nome" placeholder="Produto">
-<input id="custoProducao" inputmode="decimal" pattern="[0-9]*[,.]?[0-9]*" placeholder="Custo Produção (R$)">
-<input id="frete" inputmode="decimal" pattern="[0-9]*[,.]?[0-9]*" placeholder="Frete (R$)">
-<input id="margem" inputmode="decimal" pattern="[0-9]*[,.]?[0-9]*" placeholder="Margem (%)">
+<input id="custoProducao" placeholder="Custo Produção (R$)">
+<input id="frete" placeholder="Frete (R$)">
+<input id="margem" placeholder="Margem (%)">
 
 <div class="row">
-<input id="desconto" inputmode="decimal" pattern="[0-9]*[,.]?[0-9]*" placeholder="Desconto">
+<input id="desconto" placeholder="Desconto">
 <select id="tipoDesconto">
 <option value="porcentagem">%</option>
 <option value="valor">R$</option>
@@ -162,8 +161,8 @@ btnExtra.onclick = () => {
   div.className="extra";
   div.innerHTML=`
   <input placeholder="Nome">
-  <input inputmode="decimal" pattern="[0-9]*[,.]?[0-9]*" placeholder="R$">
-  <input inputmode="numeric" pattern="[0-9]*" placeholder="Qtd">
+  <input placeholder="R$">
+  <input placeholder="Qtd">
   <button>X</button>`;
   div.querySelector("button").onclick = () => div.remove();
   extrasEl.appendChild(div);
@@ -199,30 +198,33 @@ btnCalc.onclick = ()=>{
   });
 
   let custoTotal = custoProd + frete + totalExtras;
-  let precoBruto = custoTotal * (1 + margem/100);
 
-  let precoFinal = precoBruto;
+  // 🔥 Margem REAL
+  let precoBruto = custoTotal / (1 - margem/100);
+
+  // 🔻 Desconto correto
+  let valorDesconto = 0;
   if(tipoDescEl.value === "porcentagem"){
-    precoFinal -= precoBruto * (desconto/100);
+    valorDesconto = precoBruto * (desconto/100);
   } else {
-    precoFinal -= desconto;
+    valorDesconto = desconto;
   }
 
+  let precoFinal = precoBruto - valorDesconto;
   let lucro = precoFinal - custoTotal;
+  let margemFinal = (lucro / precoFinal) * 100;
 
-  dados = {
-    nome: nomeEl.value,
-    custoTotal,
-    precoFinal,
-    lucro,
-    margem
-  };
+  if(precoFinal <= custoTotal){
+    alert("⚠️ Atenção: venda sem lucro ou prejuízo!");
+  }
+
+  dados = { nome: nomeEl.value, custoTotal, precoFinal, lucro, margem: margemFinal };
 
   resultadoEl.innerHTML = `
     <div class="resultado-item">Custo Total: R$ ${custoTotal.toFixed(2)}</div>
     <div class="resultado-item">Preço Final: R$ ${precoFinal.toFixed(2)}</div>
     <div class="resultado-item">Lucro: R$ ${lucro.toFixed(2)}</div>
-    <div class="resultado-item">Margem: ${margem}%</div>
+    <div class="resultado-item">Margem: ${margemFinal.toFixed(2)}%</div>
   `;
 };
 
@@ -236,11 +238,8 @@ btnPdf.onclick = ()=>{
   let doc = new jsPDF();
 
   let y=20;
-
-  // DATA
   const dataAtual = new Date().toLocaleString('pt-BR');
 
-  // TÍTULO (imagem será adicionada futuramente)
   doc.setFont("helvetica","bold");
   doc.setFontSize(18);
   doc.text("RELATÓRIO OTSA",105,y,{align:"center"});
@@ -251,66 +250,26 @@ btnPdf.onclick = ()=>{
   doc.text(`Emitido em: ${dataAtual}`,10,y);
   y+=8;
 
-  // PRODUTO
   doc.setFont("helvetica","bold");
-  doc.text("INFORMAÇÕES DO PRODUTO",10,y);
+  doc.text("PRODUTO",10,y);
   y+=6;
 
   doc.setFont("helvetica","normal");
-  doc.text(`Produto: ${dados.nome}`,10,y); y+=6;
+  doc.text(`Nome: ${dados.nome}`,10,y);
+  y+=8;
 
-  // CUSTOS
-  doc.setFont("helvetica","bold");
-  doc.text("CUSTOS",10,y);
-  y+=6;
-
-  doc.setFont("helvetica","normal");
-  doc.text(`Custo Total: R$ ${dados.custoTotal.toFixed(2)}`,10,y); y+=6;
-
-  // RESULTADO
   doc.setFont("helvetica","bold");
   doc.text("RESULTADO",10,y);
   y+=6;
 
   doc.setFont("helvetica","normal");
+  doc.text(`Custo Total: R$ ${dados.custoTotal.toFixed(2)}`,10,y); y+=6;
   doc.text(`Preço Final: R$ ${dados.precoFinal.toFixed(2)}`,10,y); y+=6;
   doc.text(`Lucro: R$ ${dados.lucro.toFixed(2)}`,10,y); y+=6;
-  doc.text(`Margem: ${dados.margem}%`,10,y); y+=10;
-
-  // EXTRAS
-  doc.setFont("helvetica","bold");
-  doc.text("EXTRAS",10,y);
-  y+=6;
-
-  doc.setFont("helvetica","normal");
-
-  document.querySelectorAll(".extra").forEach(e=>{
-    let nome = e.children[0].value || "Extra";
-    let v = parseValor(e.children[1].value);
-    let q = parseValor(e.children[2].value);
-    let total = v*q;
-
-    doc.text(`${nome} | R$ ${v.toFixed(2)} x ${q} = R$ ${total.toFixed(2)}`,10,y);
-    y+=6;
-  });
-
-  y+=5;
-
-  // IMAGENS
-  if(imagens.length === 1){
-    doc.addImage(imagens[0],"JPEG",35,y,140,100);
-  } else if(imagens.length > 1){
-    let x=10;
-    imagens.forEach(img=>{
-      doc.addImage(img,"JPEG",x,y,60,60);
-      x+=70;
-      if(x>150){ x=10; y+=65; }
-    });
-  }
+  doc.text(`Margem: ${dados.margem.toFixed(2)}%`,10,y);
 
   doc.save("OTSA_PRO.pdf");
 };
-
 </script>
 </body>
 </html>
