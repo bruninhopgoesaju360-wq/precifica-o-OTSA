@@ -1,9 +1,9 @@
-<!DOCTYPE<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Precificação OTSA PRO</title>
+<title>OTSA PRO v2</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -12,27 +12,30 @@ body {
   font-family: Arial;
   background: #191917;
   color: #eeeae1;
-  display: flex;
-  justify-content: center;
   margin: 0;
 }
 
-.container { max-width: 500px; padding: 12px; }
+.container {
+  max-width: 600px;
+  margin: auto;
+  padding: 10px;
+}
 
 .card {
   background: #222220;
   padding: 12px;
   border-radius: 10px;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
-input, select {
+input {
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   margin-top: 6px;
   border-radius: 6px;
   background: #191917;
   color: #fff;
+  border: none;
 }
 
 button {
@@ -49,7 +52,7 @@ button {
 
 .extra {
   display: grid;
-  grid-template-columns: 1fr 70px 70px 35px;
+  grid-template-columns: 1fr 80px 60px 40px;
   gap: 5px;
 }
 </style>
@@ -60,9 +63,16 @@ button {
 
 <div class="card">
 <input id="nome" placeholder="Produto">
-<input id="custo" inputmode="decimal" placeholder="Custo Produção">
-<input id="frete" inputmode="decimal" placeholder="Frete">
-<input id="margem" inputmode="decimal" placeholder="Margem (%)">
+<input id="custo" placeholder="Custo Produção">
+<input id="frete" placeholder="Frete">
+<input id="margem" placeholder="Margem (%)">
+<input id="quantidade" placeholder="Quantidade Produzida">
+</div>
+
+<div class="card">
+<h4>Sociedade</h4>
+<input id="empresaPct" placeholder="% Empresa (ex: 40)">
+<input id="socios" placeholder="Qtd Sócios">
 </div>
 
 <div class="card">
@@ -71,12 +81,7 @@ button {
 </div>
 
 <div class="card">
-<input type="file" id="img" accept="image/*">
-</div>
-
-<div class="card">
 <button class="primary" id="calc">Calcular</button>
-<button class="secondary" id="pdf">Gerar PDF</button>
 </div>
 
 <div class="card" id="resultado"></div>
@@ -85,8 +90,6 @@ button {
 
 <script>
 let extrasEl = document.getElementById("extras");
-let imagens = [];
-let dados = {};
 
 function parse(v){
   if(!v) return 0;
@@ -98,135 +101,65 @@ document.getElementById("addExtra").onclick = ()=>{
   div.className = "extra";
   div.innerHTML = `
     <input placeholder="Nome">
-    <input inputmode="decimal" placeholder="R$">
-    <input inputmode="numeric" placeholder="Qtd">
+    <input placeholder="R$">
+    <input placeholder="Qtd">
     <button>X</button>
   `;
   div.querySelector("button").onclick = ()=> div.remove();
   extrasEl.appendChild(div);
 };
 
-document.getElementById("img").onchange = (e)=>{
-  imagens = [];
-  let reader = new FileReader();
-  reader.onload = ev => imagens.push(ev.target.result);
-  reader.readAsDataURL(e.target.files[0]);
-};
-
 document.getElementById("calc").onclick = ()=>{
-  let custo = parse(document.getElementById("custo").value);
-  let frete = parse(document.getElementById("frete").value);
-  let margem = parse(document.getElementById("margem").value);
+  let custo = parse(custoEl.value);
+  let frete = parse(freteEl.value);
+  let margem = parse(margemEl.value);
+  let qtd = parse(quantidade.value);
+  let empresaPct = parse(empresaPctEl.value);
+  let socios = parse(sociosEl.value);
 
   let totalExtras = 0;
-
   document.querySelectorAll(".extra").forEach(e=>{
     let v = parse(e.children[1].value);
     let q = parse(e.children[2].value);
     totalExtras += v*q;
   });
 
-  let custoTotal = custo + frete + totalExtras;
-  let preco = custoTotal / (1 - margem/100);
-  let lucro = preco - custoTotal;
-  let margemFinal = (lucro / preco) * 100;
+  let custoUnit = custo + frete + totalExtras;
+  let precoUnit = custoUnit / (1 - margem/100);
+  let lucroUnit = precoUnit - custoUnit;
 
-  dados = {
-    nome: document.getElementById("nome").value,
-    custo,
-    custoTotal,
-    preco,
-    lucro,
-    margem: margemFinal
-  };
+  let custoTotal = custoUnit * qtd;
+  let receitaTotal = precoUnit * qtd;
+  let lucroTotal = lucroUnit * qtd;
 
-  document.getElementById("resultado").innerHTML = `
-    Custo Total: R$ ${custoTotal.toFixed(2)}<br>
-    Preço: R$ ${preco.toFixed(2)}<br>
-    Lucro: R$ ${lucro.toFixed(2)}<br>
-    Margem: ${margemFinal.toFixed(2)}%
+  let empresaValor = lucroTotal * (empresaPct/100);
+  let restante = lucroTotal - empresaValor;
+  let porSocio = socios > 0 ? restante / socios : 0;
+
+  resultado.innerHTML = `
+  <b>UNITÁRIO</b><br>
+  Custo: R$ ${custoUnit.toFixed(2)}<br>
+  Preço: R$ ${precoUnit.toFixed(2)}<br>
+  Lucro: R$ ${lucroUnit.toFixed(2)}<br><br>
+
+  <b>TOTAL (${qtd} unidades)</b><br>
+  Receita: R$ ${receitaTotal.toFixed(2)}<br>
+  Lucro: R$ ${lucroTotal.toFixed(2)}<br><br>
+
+  <b>DIVISÃO</b><br>
+  Empresa: R$ ${empresaValor.toFixed(2)}<br>
+  Cada Sócio: R$ ${porSocio.toFixed(2)}
   `;
 };
 
-// 🔥 PDF PROFISSIONAL
-document.getElementById("pdf").onclick = ()=>{
-  if(!dados.preco){
-    alert("Calcule primeiro");
-    return;
-  }
-
-  const { jsPDF } = window.jspdf;
-  let doc = new jsPDF();
-
-  let y = 15;
-
-  const drawLine = () => {
-    doc.line(10, y, 200, y);
-    y += 4;
-  };
-
-  const addRow = (label, value, bold=false) => {
-    doc.setFont("helvetica", bold ? "bold" : "normal");
-    doc.text(label, 12, y);
-    doc.text(value, 190, y, {align:"right"});
-    y += 6;
-  };
-
-  doc.setFont("helvetica","bold");
-  doc.setFontSize(16);
-  doc.text("RELATÓRIO OTSA", 105, y, {align:"center"});
-  y += 10;
-
-  doc.setFontSize(10);
-  doc.text(`Emitido em: ${new Date().toLocaleString('pt-BR')}`, 10, y);
-  y += 8;
-
-  doc.setFontSize(12);
-  doc.text("PRODUTO", 10, y); y+=6; drawLine();
-  addRow("Nome:", dados.nome); y+=4;
-
-  doc.text("CUSTOS", 10, y); y+=6; drawLine();
-  addRow("Produção:", `R$ ${dados.custo.toFixed(2)}`);
-  addRow("Frete:", `R$ ${parse(document.getElementById("frete").value).toFixed(2)}`);
-
-  let totalExtras = 0;
-  document.querySelectorAll(".extra").forEach(e=>{
-    let nome = e.children[0].value || "Extra";
-    let v = parse(e.children[1].value);
-    let q = parse(e.children[2].value);
-    let total = v*q;
-    totalExtras += total;
-    addRow(`${nome} (${q}x)`, `R$ ${total.toFixed(2)}`);
-  });
-
-  addRow("Total Extras:", `R$ ${totalExtras.toFixed(2)}`, true);
-  addRow("Custo Total:", `R$ ${dados.custoTotal.toFixed(2)}`, true);
-  y+=6;
-
-  doc.text("PRECIFICAÇÃO", 10, y); y+=6; drawLine();
-  addRow("Preço:", `R$ ${dados.preco.toFixed(2)}`);
-  addRow("Lucro:", `R$ ${dados.lucro.toFixed(2)}`);
-  addRow("Margem:", `${dados.margem.toFixed(2)}%`);
-  y+=8;
-
-  doc.setFontSize(13);
-  doc.text("RESUMO FINAL", 105, y, {align:"center"});
-  y+=8; drawLine();
-
-  doc.setFontSize(12);
-  addRow("Custo Total", `R$ ${dados.custoTotal.toFixed(2)}`, true);
-  addRow("Preço de Venda", `R$ ${dados.preco.toFixed(2)}`, true);
-  addRow("Lucro", `R$ ${dados.lucro.toFixed(2)}`, true);
-  addRow("Margem", `${dados.margem.toFixed(2)}%`, true);
-
-  y+=10;
-
-  if(imagens.length > 0){
-    doc.addImage(imagens[0], "JPEG", 55, y, 100, 80);
-  }
-
-  doc.save("OTSA_PRO.pdf");
-};
+const custoEl = document.getElementById("custo");
+const freteEl = document.getElementById("frete");
+const margemEl = document.getElementById("margem");
+const quantidade = document.getElementById("quantidade");
+const empresaPctEl = document.getElementById("empresaPct");
+const sociosEl = document.getElementById("socios");
+const resultado = document.getElementById("resultado");
 </script>
+
 </body>
 </html>
