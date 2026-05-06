@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OTSA PRO v3</title>
+<title>OTSA PRO v4 (fix)</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -55,11 +55,26 @@ button { width:100%; padding:12px; margin-top:6px; border-radius:6px; border:non
 </div>
 
 <script>
-let extrasEl = document.getElementById("extras");
+// ELEMENTOS
+const nomeEl = document.getElementById("nome");
+const custoEl = document.getElementById("custo");
+const freteEl = document.getElementById("frete");
+const margemEl = document.getElementById("margem");
+const quantidadeEl = document.getElementById("quantidade");
+const empresaPctEl = document.getElementById("empresaPct");
+const sociosEl = document.getElementById("socios");
+const resultadoEl = document.getElementById("resultado");
+const extrasEl = document.getElementById("extras");
+
 let imagem = null;
 let dados = {};
 
-function parse(v){ if(!v) return 0; return parseFloat(v.replace(",","."))||0; }
+function parse(v){
+  if(!v) return 0;
+  return parseFloat(v.replace(",",".")) || 0;
+}
+
+// ADICIONAR EXTRA
 
 document.getElementById("addExtra").onclick = ()=>{
   let div = document.createElement("div");
@@ -74,25 +89,32 @@ document.getElementById("addExtra").onclick = ()=>{
   extrasEl.appendChild(div);
 };
 
+// IMAGEM
+
 document.getElementById("img").onchange = (e)=>{
   let reader = new FileReader();
   reader.onload = ev => imagem = ev.target.result;
-  reader.readAsDataURL(e.target.files[0]);
+  if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
 };
 
+// CALCULAR (FIXADO)
+
 document.getElementById("calc").onclick = ()=>{
-  let custo = parse(custo.value);
-  let frete = parse(frete.value);
-  let margem = parse(margem.value);
-  let qtd = parse(quantidade.value);
-  let empresaPct = parse(empresaPct.value);
-  let socios = parse(socios.value);
+  let custo = parse(custoEl.value);
+  let frete = parse(freteEl.value);
+  let margem = parse(margemEl.value);
+  let qtd = parse(quantidadeEl.value);
+  let empresaPct = parse(empresaPctEl.value);
+  let socios = parse(sociosEl.value);
+
+  if(qtd <= 0){ alert("Quantidade inválida"); return; }
+  if(margem >= 100){ alert("Margem não pode ser 100% ou mais"); return; }
 
   let totalExtras = 0;
   document.querySelectorAll(".extra").forEach(e=>{
     let v = parse(e.children[1].value);
     let q = parse(e.children[2].value);
-    totalExtras += v*q;
+    totalExtras += v * q;
   });
 
   let custoUnit = custo + frete + totalExtras;
@@ -105,11 +127,11 @@ document.getElementById("calc").onclick = ()=>{
 
   let empresaValor = lucroTotal * (empresaPct/100);
   let restante = lucroTotal - empresaValor;
-  let porSocio = socios>0 ? restante/socios : 0;
+  let porSocio = socios > 0 ? restante / socios : 0;
 
-  dados = { nome:nome.value, custoUnit, precoUnit, lucroUnit, custoTotal, receitaTotal, lucroTotal, empresaValor, porSocio, qtd };
+  dados = { nome:nomeEl.value, custoUnit, precoUnit, lucroUnit, custoTotal, receitaTotal, lucroTotal, empresaValor, porSocio, qtd };
 
-  resultado.innerHTML = `
+  resultadoEl.innerHTML = `
   <b>UNITÁRIO</b><br>
   Custo: R$ ${custoUnit.toFixed(2)}<br>
   Preço: R$ ${precoUnit.toFixed(2)}<br>
