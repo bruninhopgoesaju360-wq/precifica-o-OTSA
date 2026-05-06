@@ -398,6 +398,7 @@
                 extrasTotal += qty * price;
             });
 
+            // ✅ CORRIGIDO: Margem sobre CUSTO TOTAL (produção + extras)
             const totalCost = productionCost + extrasTotal;
             const markupValue = totalCost * (margin / 100);
             const salePrice = totalCost + markupValue;
@@ -427,7 +428,7 @@
                         <span class="result-value">${formatCurrency(totalCost)}</span>
                     </div>
                     <div class="result-item">
-                        <span class="result-label">Margem ${margin}%</span>
+                        <span class="result-label">Margem ${margin}% (sobre custo total)</span>
                         <span class="result-value">${formatCurrency(markupValue)}</span>
                     </div>
                     <div class="result-item">
@@ -537,7 +538,7 @@
                 startY: y,
                 head: [['Cálculo', 'Valor']],
                 body: [
-                    [`Margem de Lucro ${window.currentData.margin}%`, formatCurrency(window.currentData.markupValue)],
+                    [`Margem ${window.currentData.margin}% (sobre custo total)`, formatCurrency(window.currentData.markupValue)],
                     ['PREÇO FINAL', formatCurrency(window.currentData.salePrice)],
                     ['LUCRO TOTAL', formatCurrency(window.currentData.totalProfit)]
                 ],
