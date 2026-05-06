@@ -3,58 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OTSA PRO v2</title>
+<title>OTSA PRO v3</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body {
-  font-family: Arial;
-  background: #191917;
-  color: #eeeae1;
-  margin: 0;
-}
-
-.container {
-  max-width: 600px;
-  margin: auto;
-  padding: 10px;
-}
-
-.card {
-  background: #222220;
-  padding: 12px;
-  border-radius: 10px;
-  margin-top: 10px;
-}
-
-input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  border-radius: 6px;
-  background: #191917;
-  color: #fff;
-  border: none;
-}
-
-button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 6px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-}
-
-.primary { background: #79a1bc; }
-.secondary { background: #333; color: #fff; }
-
-.extra {
-  display: grid;
-  grid-template-columns: 1fr 80px 60px 40px;
-  gap: 5px;
-}
+body { font-family: Arial; background:#191917; color:#eeeae1; margin:0; }
+.container { max-width:600px; margin:auto; padding:10px; }
+.card { background:#222220; padding:12px; border-radius:10px; margin-top:10px; }
+input { width:100%; padding:10px; margin-top:6px; border-radius:6px; background:#191917; color:#fff; border:none; }
+button { width:100%; padding:12px; margin-top:6px; border-radius:6px; border:none; cursor:pointer; }
+.primary { background:#79a1bc; }
+.secondary { background:#333; color:#fff; }
+.extra { display:grid; grid-template-columns:1fr 80px 60px 40px; gap:5px; }
 </style>
 </head>
 
@@ -81,7 +42,12 @@ button {
 </div>
 
 <div class="card">
+<input type="file" id="img" accept="image/*">
+</div>
+
+<div class="card">
 <button class="primary" id="calc">Calcular</button>
+<button class="secondary" id="pdf">Gerar PDF</button>
 </div>
 
 <div class="card" id="resultado"></div>
@@ -90,11 +56,10 @@ button {
 
 <script>
 let extrasEl = document.getElementById("extras");
+let imagem = null;
+let dados = {};
 
-function parse(v){
-  if(!v) return 0;
-  return parseFloat(v.replace(",", ".")) || 0;
-}
+function parse(v){ if(!v) return 0; return parseFloat(v.replace(",","."))||0; }
 
 document.getElementById("addExtra").onclick = ()=>{
   let div = document.createElement("div");
@@ -109,13 +74,19 @@ document.getElementById("addExtra").onclick = ()=>{
   extrasEl.appendChild(div);
 };
 
+document.getElementById("img").onchange = (e)=>{
+  let reader = new FileReader();
+  reader.onload = ev => imagem = ev.target.result;
+  reader.readAsDataURL(e.target.files[0]);
+};
+
 document.getElementById("calc").onclick = ()=>{
-  let custo = parse(custoEl.value);
-  let frete = parse(freteEl.value);
-  let margem = parse(margemEl.value);
+  let custo = parse(custo.value);
+  let frete = parse(frete.value);
+  let margem = parse(margem.value);
   let qtd = parse(quantidade.value);
-  let empresaPct = parse(empresaPctEl.value);
-  let socios = parse(sociosEl.value);
+  let empresaPct = parse(empresaPct.value);
+  let socios = parse(socios.value);
 
   let totalExtras = 0;
   document.querySelectorAll(".extra").forEach(e=>{
@@ -134,7 +105,9 @@ document.getElementById("calc").onclick = ()=>{
 
   let empresaValor = lucroTotal * (empresaPct/100);
   let restante = lucroTotal - empresaValor;
-  let porSocio = socios > 0 ? restante / socios : 0;
+  let porSocio = socios>0 ? restante/socios : 0;
+
+  dados = { nome:nome.value, custoUnit, precoUnit, lucroUnit, custoTotal, receitaTotal, lucroTotal, empresaValor, porSocio, qtd };
 
   resultado.innerHTML = `
   <b>UNITÁRIO</b><br>
@@ -142,23 +115,54 @@ document.getElementById("calc").onclick = ()=>{
   Preço: R$ ${precoUnit.toFixed(2)}<br>
   Lucro: R$ ${lucroUnit.toFixed(2)}<br><br>
 
-  <b>TOTAL (${qtd} unidades)</b><br>
+  <b>TOTAL</b><br>
   Receita: R$ ${receitaTotal.toFixed(2)}<br>
   Lucro: R$ ${lucroTotal.toFixed(2)}<br><br>
 
   <b>DIVISÃO</b><br>
   Empresa: R$ ${empresaValor.toFixed(2)}<br>
-  Cada Sócio: R$ ${porSocio.toFixed(2)}
+  Sócio: R$ ${porSocio.toFixed(2)}
   `;
 };
 
-const custoEl = document.getElementById("custo");
-const freteEl = document.getElementById("frete");
-const margemEl = document.getElementById("margem");
-const quantidade = document.getElementById("quantidade");
-const empresaPctEl = document.getElementById("empresaPct");
-const sociosEl = document.getElementById("socios");
-const resultado = document.getElementById("resultado");
+// PDF
+
+document.getElementById("pdf").onclick = ()=>{
+  if(!dados.precoUnit){ alert("Calcule primeiro"); return; }
+
+  const { jsPDF } = window.jspdf;
+  let doc = new jsPDF();
+  let y = 15;
+
+  function row(label,val){ doc.text(label,12,y); doc.text(val,190,y,{align:"right"}); y+=6; }
+
+  doc.setFont("helvetica","bold");
+  doc.text("RELATÓRIO OTSA",105,y,{align:"center"}); y+=10;
+
+  doc.setFont("helvetica","normal");
+  doc.text(`Produto: ${dados.nome}`,10,y); y+=8;
+
+  doc.setFont("helvetica","bold"); doc.text("UNITÁRIO",10,y); y+=6;
+  doc.setFont("helvetica","normal");
+  row("Custo","R$ "+dados.custoUnit.toFixed(2));
+  row("Preço","R$ "+dados.precoUnit.toFixed(2));
+  row("Lucro","R$ "+dados.lucroUnit.toFixed(2)); y+=4;
+
+  doc.setFont("helvetica","bold"); doc.text("TOTAL",10,y); y+=6;
+  doc.setFont("helvetica","normal");
+  row("Qtd",dados.qtd.toString());
+  row("Receita","R$ "+dados.receitaTotal.toFixed(2));
+  row("Lucro","R$ "+dados.lucroTotal.toFixed(2)); y+=4;
+
+  doc.setFont("helvetica","bold"); doc.text("DIVISÃO",10,y); y+=6;
+  doc.setFont("helvetica","normal");
+  row("Empresa","R$ "+dados.empresaValor.toFixed(2));
+  row("Por Sócio","R$ "+dados.porSocio.toFixed(2));
+
+  if(imagem){ y+=10; doc.addImage(imagem,"JPEG",55,y,100,80); }
+
+  doc.save("OTSA_PRO.pdf");
+};
 </script>
 
 </body>
