@@ -1,191 +1,518 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OTSA PRO v4 (fix)</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTSA - Calculadora de Produtos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-<style>
-body { font-family: Arial; background:#191917; color:#eeeae1; margin:0; }
-.container { max-width:600px; margin:auto; padding:10px; }
-.card { background:#222220; padding:12px; border-radius:10px; margin-top:10px; }
-input { width:100%; padding:10px; margin-top:6px; border-radius:6px; background:#191917; color:#fff; border:none; }
-button { width:100%; padding:12px; margin-top:6px; border-radius:6px; border:none; cursor:pointer; }
-.primary { background:#79a1bc; }
-.secondary { background:#333; color:#fff; }
-.extra { display:grid; grid-template-columns:1fr 80px 60px 40px; gap:5px; }
-</style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+
+        input[type="text"], input[type="number"], input[type="file"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .extras-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .extra-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: end;
+        }
+
+        .extra-item input {
+            flex: 1;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .results {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 25px;
+            display: none;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .result-total {
+            font-size: 1.4rem;
+            font-weight: bold;
+            border-top: 2px solid rgba(255,255,255,0.3);
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        .product-image {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .extras-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .extra-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .division {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .division h3 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .division-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .division-item {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .extra-item {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .btn-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
-
 <body>
-<div class="container">
+    <div class="container">
+        <div class="header">
+            <h1>🏭 OTSA</h1>
+            <p>Calculadora de Produtos e Lucros</p>
+        </div>
+        
+        <div class="content">
+            <form id="productForm">
+                <div class="form-group">
+                    <label for="productName">Nome do Produto</label>
+                    <input type="text" id="productName" required>
+                </div>
 
-<div class="card">
-<input id="nome" placeholder="Produto">
-<input id="custo" placeholder="Custo Produção">
-<input id="frete" placeholder="Frete">
-<input id="margem" placeholder="Margem (%)">
-<input id="quantidade" placeholder="Quantidade Produzida">
-</div>
+                <div class="form-group">
+                    <label for="productionCost">Valor Unitário de Produção (R$)</label>
+                    <input type="number" id="productionCost" step="0.01" min="0" required>
+                </div>
 
-<div class="card">
-<h4>Sociedade</h4>
-<input id="empresaPct" placeholder="% Empresa (ex: 40)">
-<input id="socios" placeholder="Qtd Sócios">
-</div>
+                <div class="extras-container">
+                    <label>Extras (Nome, Qtd, Valor Unitário)</label>
+                    <div class="extras-list" id="extrasList">
+                        <div class="extra-item">
+                            <input type="text" placeholder="Nome do extra" class="extra-name">
+                            <input type="number" placeholder="Qtd" class="extra-qty" step="0.01" min="0">
+                            <input type="number" placeholder="R$/un" class="extra-price" step="0.01" min="0">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="removeExtra(this)">❌</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="addExtra()" style="width: auto; margin-top: 15px; padding: 10px 20px;">+ Adicionar Extra</button>
+                </div>
 
-<div class="card">
-<div id="extras"></div>
-<button class="secondary" id="addExtra">+ Extra</button>
-</div>
+                <div class="form-group">
+                    <label for="margin">Margem de Lucro (%)</label>
+                    <input type="number" id="margin" step="0.1" min="0" max="100" value="30">
+                </div>
 
-<div class="card">
-<input type="file" id="img" accept="image/*">
-</div>
+                <div class="form-group">
+                    <label for="productImage">Imagem do Produto</label>
+                    <input type="file" id="productImage" accept="image/*">
+                    <img id="previewImage" class="product-image" alt="Pré-visualização">
+                </div>
 
-<div class="card">
-<button class="primary" id="calc">Calcular</button>
-<button class="secondary" id="pdf">Gerar PDF</button>
-</div>
+                <div class="btn-group">
+                    <button type="button" class="btn" onclick="calculate()">🧮 Calcular</button>
+                    <button type="button" class="btn btn-success" onclick="exportPDF()">📄 Exportar PDF</button>
+                </div>
+            </form>
 
-<div class="card" id="resultado"></div>
+            <div id="results" class="results">
+                <div class="result-item">
+                    <span>Custo Produção:</span>
+                    <span id="costProduction">R$ 0,00</span>
+                </div>
+                <div class="result-item">
+                    <span>Custo Extras:</span>
+                    <span id="costExtras">R$ 0,00</span>
+                </div>
+                <div class="result-item">
+                    <span>Custo Total:</span>
+                    <span id="costTotal">R$ 0,00</span>
+                </div>
+                <div class="result-item">
+                    <span>Preço de Venda:</span>
+                    <span id="salePrice">R$ 0,00</span>
+                </div>
+                <div class="result-item result-total">
+                    <span>Lucro Total:</span>
+                    <span id="totalProfit">R$ 0,00</span>
+                </div>
 
-</div>
+                <div class="division">
+                    <h3>📊 Divisão de Lucros</h3>
+                    <div class="division-grid">
+                        <div class="division-item">
+                            <strong>Empresa (40%)</strong><br>
+                            <span id="companyProfit">R$ 0,00</span>
+                        </div>
+                        <div class="division-item">
+                            <strong>Sócio 1 (20%)</strong><br>
+                            <span id="partner1Profit">R$ 0,00</span>
+                        </div>
+                        <div class="division-item">
+                            <strong>Sócio 2 (20%)</strong><br>
+                            <span id="partner2Profit">R$ 0,00</span>
+                        </div>
+                        <div class="division-item">
+                            <strong>Sócio 3 (20%)</strong><br>
+                            <span id="partner3Profit">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script>
-// ELEMENTOS
-const nomeEl = document.getElementById("nome");
-const custoEl = document.getElementById("custo");
-const freteEl = document.getElementById("frete");
-const margemEl = document.getElementById("margem");
-const quantidadeEl = document.getElementById("quantidade");
-const empresaPctEl = document.getElementById("empresaPct");
-const sociosEl = document.getElementById("socios");
-const resultadoEl = document.getElementById("resultado");
-const extrasEl = document.getElementById("extras");
+    <script>
+        let extraCount = 1;
 
-let imagem = null;
-let dados = {};
+        function addExtra() {
+            const extrasList = document.getElementById('extrasList');
+            const extraDiv = document.createElement('div');
+            extraDiv.className = 'extra-item';
+            extraDiv.innerHTML = `
+                <input type="text" placeholder="Nome do extra" class="extra-name">
+                <input type="number" placeholder="Qtd" class="extra-qty" step="0.01" min="0">
+                <input type="number" placeholder="R$/un" class="extra-price" step="0.01" min="0">
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeExtra(this)">❌</button>
+            `;
+            extrasList.appendChild(extraDiv);
+            extraCount++;
+        }
 
-function parse(v){
-  if(!v) return 0;
-  return parseFloat(v.replace(",",".")) || 0;
-}
+        function removeExtra(button) {
+            button.parentElement.remove();
+        }
 
-// ADICIONAR EXTRA
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
 
-document.getElementById("addExtra").onclick = ()=>{
-  let div = document.createElement("div");
-  div.className = "extra";
-  div.innerHTML = `
-    <input placeholder="Nome">
-    <input placeholder="R$">
-    <input placeholder="Qtd">
-    <button>X</button>
-  `;
-  div.querySelector("button").onclick = ()=> div.remove();
-  extrasEl.appendChild(div);
-};
+        function calculate() {
+            const productName = document.getElementById('productName').value;
+            const productionCost = parseFloat(document.getElementById('productionCost').value) || 0;
+            const margin = parseFloat(document.getElementById('margin').value) || 0;
+            
+            let extrasTotal = 0;
+            const extraInputs = document.querySelectorAll('.extra-name, .extra-qty, .extra-price');
+            const extras = [];
+            
+            for (let i = 0; i < extraInputs.length; i += 3) {
+                const name = extraInputs[i].value;
+                const qty = parseFloat(extraInputs[i + 1].value) || 0;
+                const price = parseFloat(extraInputs[i + 2].value) || 0;
+                
+                if (name && qty && price) {
+                    const total = qty * price;
+                    extrasTotal += total;
+                    extras.push({ name, qty, price, total });
+                }
+            }
 
-// IMAGEM
+            const totalCost = productionCost + extrasTotal;
+            const profitMargin = totalCost * (margin / 100);
+            const salePrice = totalCost + profitMargin;
+            const totalProfit = profitMargin;
 
-document.getElementById("img").onchange = (e)=>{
-  let reader = new FileReader();
-  reader.onload = ev => imagem = ev.target.result;
-  if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
-};
+            // Divisão de lucros
+            const companyProfit = totalProfit * 0.4;
+            const partnerProfit = (totalProfit * 0.6) / 3;
 
-// CALCULAR (FIXADO)
+            // Atualizar resultados
+            document.getElementById('costProduction').textContent = formatCurrency(productionCost);
+            document.getElementById('costExtras').textContent = formatCurrency(extrasTotal);
+            document.getElementById('costTotal').textContent = formatCurrency(totalCost);
+            document.getElementById('salePrice').textContent = formatCurrency(salePrice);
+            document.getElementById('totalProfit').textContent = formatCurrency(totalProfit);
+            
+            document.getElementById('companyProfit').textContent = formatCurrency(companyProfit);
+            document.getElementById('partner1Profit').textContent = formatCurrency(partnerProfit);
+            document.getElementById('partner2Profit').textContent = formatCurrency(partnerProfit);
+            document.getElementById('partner3Profit').textContent = formatCurrency(partnerProfit);
 
-document.getElementById("calc").onclick = ()=>{
-  let custo = parse(custoEl.value);
-  let frete = parse(freteEl.value);
-  let margem = parse(margemEl.value);
-  let qtd = parse(quantidadeEl.value);
-  let empresaPct = parse(empresaPctEl.value);
-  let socios = parse(sociosEl.value);
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
 
-  if(qtd <= 0){ alert("Quantidade inválida"); return; }
-  if(margem >= 100){ alert("Margem não pode ser 100% ou mais"); return; }
+            // Salvar dados para PDF
+            window.currentData = {
+                productName,
+                productionCost,
+                extrasTotal,
+                totalCost,
+                salePrice,
+                totalProfit,
+                margin,
+                companyProfit,
+                partnerProfit,
+                extras
+            };
+        }
 
-  let totalExtras = 0;
-  document.querySelectorAll(".extra").forEach(e=>{
-    let v = parse(e.children[1].value);
-    let q = parse(e.children[2].value);
-    totalExtras += v * q;
-  });
+        document.getElementById('productImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('previewImage');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
-  let custoUnit = custo + frete + totalExtras;
-  let precoUnit = custoUnit / (1 - margem/100);
-  let lucroUnit = precoUnit - custoUnit;
+        async function exportPDF() {
+            if (!window.currentData) {
+                alert('Por favor, calcule primeiro!');
+                return;
+            }
 
-  let custoTotal = custoUnit * qtd;
-  let receitaTotal = precoUnit * qtd;
-  let lucroTotal = lucroUnit * qtd;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Header
+            doc.setFontSize(20);
+            doc.setTextColor(52, 152, 219);
+            doc.text('OTSA - Orçamento de Produto', 20, 25);
+            
+            doc.setFontSize(12);
+            doc.setTextColor(44, 62, 80);
+            doc.text(`Produto: ${window.currentData.productName}`, 20, 45);
+            
+            // Imagem
+            const img = document.getElementById('previewImage');
+            if (img.style.display !== 'none' && img.src) {
+                try {
+                    const imgData = await html2canvas(img).then(canvas => canvas.toDataURL('image/png'));
+                    doc.addImage(imgData, 'PNG', 20, 55, 60, 40);
+                } catch(e) {
+                    console.log('Erro ao adicionar imagem');
+                }
+            }
 
-  let empresaValor = lucroTotal * (empresaPct/100);
-  let restante = lucroTotal - empresaValor;
-  let porSocio = socios > 0 ? restante / socios : 0;
+            // Tabela de custos
+            let yPos = img.style.display !== 'none' ? 105 : 65;
+            
+            doc.setFontSize(14);
+            doc.text('📊 RESUMO FINANCEIRO', 20, yPos);
+            yPos += 15;
 
-  dados = { nome:nomeEl.value, custoUnit, precoUnit, lucroUnit, custoTotal, receitaTotal, lucroTotal, empresaValor, porSocio, qtd };
+            doc.setFontSize(10);
+            doc.autoTable({
+                startY: yPos,
+                head: [['Item', 'Valor']],
+                body: [
+                    ['Custo Produção', formatCurrency(window.currentData.productionCost)],
+                    ['Custo Extras', formatCurrency(window.currentData.extrasTotal)],
+                    ['Custo Total', formatCurrency(window.currentData.totalCost)],
+                    ['Preço de Venda', formatCurrency(window.currentData.salePrice)],
+                    ['Lucro Total', formatCurrency(window.currentData.totalProfit)]
+                ],
+                theme: 'grid',
+                styles: { fontSize: 10, cellPadding: 5 },
+                headStyles: { fillColor: [52, 152, 219], textColor: 255 },
+                alternateRowStyles: { fillColor: [248, 249, 250] }
+            });
 
-  resultadoEl.innerHTML = `
-  <b>UNITÁRIO</b><br>
-  Custo: R$ ${custoUnit.toFixed(2)}<br>
-  Preço: R$ ${precoUnit.toFixed(2)}<br>
-  Lucro: R$ ${lucroUnit.toFixed(2)}<br><br>
+            yPos = doc.lastAutoTable.finalY + 20;
 
-  <b>TOTAL</b><br>
-  Receita: R$ ${receitaTotal.toFixed(2)}<br>
-  Lucro: R$ ${lucroTotal.toFixed(2)}<br><br>
+            // Divisão de lucros
+            doc.setFontSize(14);
+            doc.text('📈 DIVISÃO DE LUCROS', 20, yPos);
+            yPos += 15;
 
-  <b>DIVISÃO</b><br>
-  Empresa: R$ ${empresaValor.toFixed(2)}<br>
-  Sócio: R$ ${porSocio.toFixed(2)}
-  `;
-};
+            doc.autoTable({
+                startY: yPos,
+                head: [['Destinatário', 'Valor']],
+                body: [
+                    ['Empresa (40%)', formatCurrency(window.currentData.companyProfit)],
+                    ['Sócio 1 (20%)', formatCurrency(window.currentData.partnerProfit)],
+                    ['Sócio 2 (20%)', formatCurrency(window.currentData.partnerProfit)],
+                    ['Sócio 3 (20%)', formatCurrency(window.currentData.partnerProfit)]
+                ],
+                theme: 'grid',
+                styles: { fontSize: 10, cellPadding: 5 },
+                headStyles: { fillColor: [39, 174, 96], textColor: 255 },
+                alternateRowStyles: { fillColor: [248, 249, 250] }
+            });
 
-// PDF
-
-document.getElementById("pdf").onclick = ()=>{
-  if(!dados.precoUnit){ alert("Calcule primeiro"); return; }
-
-  const { jsPDF } = window.jspdf;
-  let doc = new jsPDF();
-  let y = 15;
-
-  function row(label,val){ doc.text(label,12,y); doc.text(val,190,y,{align:"right"}); y+=6; }
-
-  doc.setFont("helvetica","bold");
-  doc.text("RELATÓRIO OTSA",105,y,{align:"center"}); y+=10;
-
-  doc.setFont("helvetica","normal");
-  doc.text(`Produto: ${dados.nome}`,10,y); y+=8;
-
-  doc.setFont("helvetica","bold"); doc.text("UNITÁRIO",10,y); y+=6;
-  doc.setFont("helvetica","normal");
-  row("Custo","R$ "+dados.custoUnit.toFixed(2));
-  row("Preço","R$ "+dados.precoUnit.toFixed(2));
-  row("Lucro","R$ "+dados.lucroUnit.toFixed(2)); y+=4;
-
-  doc.setFont("helvetica","bold"); doc.text("TOTAL",10,y); y+=6;
-  doc.setFont("helvetica","normal");
-  row("Qtd",dados.qtd.toString());
-  row("Receita","R$ "+dados.receitaTotal.toFixed(2));
-  row("Lucro","R$ "+dados.lucroTotal.toFixed(2)); y+=4;
-
-  doc.setFont("helvetica","bold"); doc.text("DIVISÃO",10,y); y+=6;
-  doc.setFont("helvetica","normal");
-  row("Empresa","R$ "+dados.empresaValor.toFixed(2));
-  row("Por Sócio","R$ "+dados.porSocio.toFixed(2));
-
-  if(imagem){ y+=10; doc.addImage(imagem,"JPEG",55,y,100,80); }
-
-  doc.save("OTSA_PRO.pdf");
-};
-</script>
-
+            // Footer
+            doc.setFontSize(8);
+            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 20, 290);
+            
+            doc.save(`OTSA_${window.currentData.productName.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.pdf`);
+        }
+    </script>
 </body>
 </html>
