@@ -98,43 +98,77 @@
             color: #94a3b8;
         }
 
+        /* EXTRAS REDESIGN */
         .extras-section {
             background: #1e293b;
-            border: 1px solid #334155;
+            border: 2px solid #3b82f6;
             border-radius: 12px;
-            padding: 20px;
+            padding: 0;
             margin-bottom: 20px;
+            overflow: hidden;
         }
 
         .extras-header {
+            background: #1e3a8a;
+            padding: 16px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
         }
 
         .extras-title {
             font-weight: 600;
+            font-size: 1rem;
+            color: white;
+        }
+
+        .extras-list {
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        .extra-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 40px;
+            gap: 12px;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #334155;
+            transition: all 0.2s;
+        }
+
+        .extra-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .extra-item:last-child {
+            border-bottom: none;
+        }
+
+        .extra-item input {
+            height: 44px;
+            padding: 12px 12px;
             font-size: 0.95rem;
         }
 
-        .extra-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 24px;
-            gap: 12px;
-            align-items: end;
-            margin-bottom: 12px;
-            padding: 12px;
-            background: rgba(59, 130, 246, 0.05);
-            border-radius: 8px;
+        .extra-remove {
+            background: #ef4444;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
         }
 
-        .extra-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .extra-row input {
-            height: 40px;
+        .extra-remove:hover {
+            background: #dc2626;
+            transform: scale(1.1);
         }
 
         .btn {
@@ -155,20 +189,6 @@
         .btn:hover {
             background: #2563eb;
             transform: translateY(-1px);
-        }
-
-        .btn-sm {
-            padding: 8px 12px;
-            font-size: 0.8rem;
-            height: 40px;
-        }
-
-        .btn-secondary {
-            background: #64748b;
-        }
-
-        .btn-secondary:hover {
-            background: #475569;
         }
 
         .btn-success {
@@ -196,9 +216,10 @@
         .result-item {
             display: flex;
             justify-content: space-between;
-            padding: 12px;
+            padding: 16px;
             background: rgba(255,255,255,0.1);
-            border-radius: 8px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
         }
 
         .result-label {
@@ -206,8 +227,8 @@
         }
 
         .result-value {
-            font-weight: 600;
-            font-size: 1.1rem;
+            font-weight: 700;
+            font-size: 1.15rem;
         }
 
         .division-grid {
@@ -218,16 +239,10 @@
         }
 
         .division-item {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15);
             padding: 16px;
-            border-radius: 8px;
+            border-radius: 10px;
             text-align: center;
-        }
-
-        .division-role {
-            font-size: 0.8rem;
-            opacity: 0.9;
-            margin-bottom: 4px;
         }
 
         .btn-group {
@@ -237,17 +252,6 @@
             margin-top: 24px;
         }
 
-        @media (max-width: 640px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .extra-row {
-                grid-template-columns: 2fr 1fr 1fr 40px;
-                gap: 8px;
-            }
-        }
-
         .image-preview {
             width: 100%;
             height: 120px;
@@ -255,7 +259,16 @@
             border-radius: 10px;
             margin-top: 8px;
             display: none;
-            border: 1px solid #475569;
+            border: 2px solid #475569;
+        }
+
+        @media (max-width: 640px) {
+            .form-row { grid-template-columns: 1fr; }
+            .extra-item { 
+                grid-template-columns: 2fr 1fr 1fr 48px; 
+                gap: 8px;
+                padding: 12px 16px;
+            }
         }
     </style>
 </head>
@@ -272,18 +285,18 @@
                     <input type="text" id="productName" placeholder="Nome do produto" required>
                 </div>
                 <div class="form-group">
-                    <label>Custo Produção (R$)</label>
+                    <label>Custo Produção</label>
                     <input type="number" id="productionCost" step="0.01" min="0" placeholder="0,00">
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label>Margem (%)</label>
+                    <label>Margem de Lucro</label>
                     <input type="number" id="margin" step="0.1" min="0" max="100" value="30" placeholder="30">
                 </div>
                 <div class="form-group">
-                    <label>Imagem</label>
+                    <label>Foto do Produto</label>
                     <input type="file" id="productImage" accept="image/*">
                     <img id="imagePreview" class="image-preview">
                 </div>
@@ -291,15 +304,15 @@
 
             <div class="extras-section">
                 <div class="extras-header">
-                    <div class="extras-title">Extras</div>
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="addExtra()">+ Novo</button>
+                    <div class="extras-title">📦 EXTRAS</div>
+                    <button type="button" class="btn" onclick="addExtra()" style="padding: 8px 16px; font-size: 0.85rem;">+ Adicionar</button>
                 </div>
-                <div id="extrasContainer"></div>
+                <div class="extras-list" id="extrasContainer"></div>
             </div>
 
             <div class="btn-group">
-                <button type="button" class="btn" onclick="calculate()">Calcular</button>
-                <button type="button" class="btn btn-success" onclick="exportPDF()">PDF</button>
+                <button type="button" class="btn" onclick="calculate()">🧮 Calcular</button>
+                <button type="button" class="btn btn-success" onclick="exportPDF()">📄 PDF</button>
             </div>
 
             <div id="results" class="results"></div>
@@ -313,43 +326,37 @@
             extraId++;
             const container = document.getElementById('extrasContainer');
             const extraDiv = document.createElement('div');
-            extraDiv.className = 'extra-row';
+            extraDiv.className = 'extra-item';
             extraDiv.id = `extra-${extraId}`;
             extraDiv.innerHTML = `
-                <input type="text" class="extra-name" placeholder="Nome">
+                <input type="text" class="extra-name" placeholder="Ex: Frete, Embalagem...">
                 <input type="number" class="extra-qty" step="0.01" min="0" placeholder="Qtd">
                 <input type="number" class="extra-price" step="0.01" min="0" placeholder="R$/un">
-                <button type="button" class="btn btn-sm" onclick="removeExtra('extra-${extraId}')">×</button>
+                <button type="button" class="extra-remove" onclick="removeExtra('extra-${extraId}')">×</button>
             `;
             container.appendChild(extraDiv);
         }
 
         function removeExtra(id) {
-            const extra = document.getElementById(id);
-            if (extra) extra.remove();
+            document.getElementById(id)?.remove();
         }
 
-        // Adicionar 1 extra por padrão
-        addExtra();
+        addExtra(); // 1 extra por padrão
 
         document.getElementById('productImage').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    const preview = document.getElementById('imagePreview');
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
+                reader.onload = e => {
+                    document.getElementById('imagePreview').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
                 };
                 reader.readAsDataURL(file);
             }
         });
 
         function formatCurrency(value) {
-            return new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL'
-            }).format(value || 0);
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
         }
 
         function calculate() {
@@ -360,72 +367,73 @@
             let extrasTotal = 0;
             const extrasData = [];
 
-            document.querySelectorAll('.extra-row').forEach(row => {
-                const name = row.querySelector('.extra-name').value;
+            document.querySelectorAll('.extra-item').forEach(row => {
+                const name = row.querySelector('.extra-name').value.trim();
                 const qty = parseFloat(row.querySelector('.extra-qty').value) || 0;
                 const price = parseFloat(row.querySelector('.extra-price').value) || 0;
                 
                 if (name && qty > 0 && price > 0) {
                     const total = qty * price;
                     extrasTotal += total;
-                    extrasData.push({ name, qty, price, total });
+                    extrasData.push({ name, qty, price, total: formatCurrency(total) });
                 }
             });
 
             const totalCost = productionCost + extrasTotal;
-            const profitMargin = totalCost * (margin / 100);
-            const salePrice = totalCost + profitMargin;
-            const totalProfit = profitMargin;
+            const markupValue = totalCost * (margin / 100);
+            const salePrice = totalCost + markupValue;
+            const totalProfit = markupValue;
 
             const companyProfit = totalProfit * 0.4;
             const partnerProfit = totalProfit * 0.2;
 
-            // Salvar dados
             window.currentData = {
-                productName, productionCost, extrasTotal, totalCost, 
+                productName, productionCost, extrasTotal, totalCost, markupValue,
                 salePrice, totalProfit, margin, companyProfit, partnerProfit, extrasData
             };
 
-            // Renderizar resultados
             const results = document.getElementById('results');
             results.innerHTML = `
                 <div class="result-grid">
                     <div class="result-item">
-                        <span class="result-label">Produção</span>
+                        <span class="result-label">Custo Produção</span>
                         <span class="result-value">${formatCurrency(productionCost)}</span>
                     </div>
                     <div class="result-item">
-                        <span class="result-label">Extras</span>
+                        <span class="result-label">Custo Extras</span>
                         <span class="result-value">${formatCurrency(extrasTotal)}</span>
                     </div>
                     <div class="result-item">
-                        <span class="result-label">Total Custo</span>
+                        <span class="result-label">Custo Total</span>
                         <span class="result-value">${formatCurrency(totalCost)}</span>
                     </div>
                     <div class="result-item">
-                        <span class="result-label">Venda</span>
+                        <span class="result-label">Margem ${margin}%</span>
+                        <span class="result-value">${formatCurrency(markupValue)}</span>
+                    </div>
+                    <div class="result-item" style="background: rgba(16,185,129,0.3); border: 1px solid rgba(16,185,129,0.5);">
+                        <span class="result-label">💰 Valor a Cobrar</span>
                         <span class="result-value">${formatCurrency(salePrice)}</span>
                     </div>
-                    <div class="result-item" style="background: rgba(16,185,129,0.3);">
-                        <span class="result-label">Lucro Total</span>
-                        <span class="result-value">${formatCurrency(totalProfit)}</span>
-                    </div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 16px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="font-weight: 600; margin-bottom: 8px;">Lucro Total: ${formatCurrency(totalProfit)}</div>
                 </div>
                 <div class="division-grid">
                     <div class="division-item">
-                        <div class="division-role">Empresa 40%</div>
+                        <div class="division-role">🏢 Empresa<br><span style="font-size: 0.75rem;">40%</span></div>
                         <div class="result-value">${formatCurrency(companyProfit)}</div>
                     </div>
                     <div class="division-item">
-                        <div class="division-role">Sócio 1 20%</div>
+                        <div class="division-role">👤 Sócio 1<br><span style="font-size: 0.75rem;">20%</span></div>
                         <div class="result-value">${formatCurrency(partnerProfit)}</div>
                     </div>
                     <div class="division-item">
-                        <div class="division-role">Sócio 2 20%</div>
+                        <div class="division-role">👤 Sócio 2<br><span style="font-size: 0.75rem;">20%</span></div>
                         <div class="result-value">${formatCurrency(partnerProfit)}</div>
                     </div>
                     <div class="division-item">
-                        <div class="division-role">Sócio 3 20%</div>
+                        <div class="division-role">👤 Sócio 3<br><span style="font-size: 0.75rem;">20%</span></div>
                         <div class="result-value">${formatCurrency(partnerProfit)}</div>
                     </div>
                 </div>
@@ -435,25 +443,19 @@
         }
 
         async function exportPDF() {
-            if (!window.currentData) {
-                alert('Calcule primeiro');
-                return;
-            }
+            if (!window.currentData) return alert('Calcule primeiro');
 
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
-            
             let y = 20;
-            
+
             // Header
-            doc.setFontSize(18);
+            doc.setFontSize(20);
             doc.setTextColor(62, 130, 246);
             doc.setFont('helvetica', 'bold');
-            doc.text('OTSA', 20, y);
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            doc.text(window.currentData.productName, 20, y + 8);
-            
+            doc.text('OTSA', 105, y, { align: 'center' });
+            doc.setFontSize(14);
+            doc.text(window.currentData.productName.toUpperCase(), 105, y + 8, { align: 'center' });
             y += 25;
 
             // Imagem
@@ -462,45 +464,83 @@
                 try {
                     const canvas = await html2canvas(img, { scale: 2 });
                     const imgData = canvas.toDataURL('image/png');
-                    doc.addImage(imgData, 'PNG', 20, y, 40, 30);
-                    y += 35;
+                    doc.addImage(imgData, 'PNG', 20, y, 50, 35);
+                    doc.addImage(imgData, 'PNG', 135, y, 50, 35);
+                    y += 40;
                 } catch(e) {}
             }
 
-            // Tabelas
+            // Tabela 1: CUSTOS
+            doc.setFontSize(16);
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.text('📊 CUSTOS DE PRODUÇÃO', 20, y);
+            y += 8;
+
             doc.autoTable({
                 startY: y,
-                head: [['', 'R$']],
+                head: [['Descrição', 'Valor']],
                 body: [
-                    ['Custo Produção', formatCurrency(window.currentData.productionCost)],
-                    ['Custo Extras', formatCurrency(window.currentData.extrasTotal)],
-                    ['TOTAL CUSTO', formatCurrency(window.currentData.totalCost)],
-                    ['PREÇO VENDA', formatCurrency(window.currentData.salePrice)],
+                    ['Custo de Produção', formatCurrency(window.currentData.productionCost)],
+                    ['Custo dos Extras', formatCurrency(window.currentData.extrasTotal)],
+                    ['TOTAL CUSTOS', formatCurrency(window.currentData.totalCost)]
+                ],
+                theme: 'grid',
+                styles: { fontSize: 11, cellPadding: 6 },
+                headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: 'bold' },
+                columnStyles: { 0: { halign: 'left' }, 1: { halign: 'right', fontStyle: 'bold' } },
+                rowStyles: { 2: { fillColor: [99, 102, 241] } }
+            });
+            y = doc.lastAutoTable.finalY + 15;
+
+            // Tabela 2: PREÇO FINAL
+            doc.setFontSize(16);
+            doc.text('💰 VALOR A COBRAR', 20, y);
+            y += 8;
+
+            doc.autoTable({
+                startY: y,
+                head: [['Cálculo', 'Valor']],
+                body: [
+                    [`Margem de Lucro ${window.currentData.margin}%`, formatCurrency(window.currentData.markupValue)],
+                    ['PREÇO FINAL CLIENTE', formatCurrency(window.currentData.salePrice)],
                     ['LUCRO TOTAL', formatCurrency(window.currentData.totalProfit)]
                 ],
                 theme: 'grid',
-                styles: { fontSize: 10, cellPadding: 4 },
-                headStyles: { fillColor: [30, 58, 138] },
-                columnStyles: { 0: { halign: 'left' }, 1: { halign: 'right' } },
-                rowStyles: { 3: { fillColor: [16, 185, 129] } }
+                styles: { fontSize: 11, cellPadding: 6 },
+                headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold' },
+                columnStyles: { 0: { halign: 'left' }, 1: { halign: 'right', fontStyle: 'bold' } },
+                rowStyles: { 
+                    1: { fillColor: [16, 185, 129] },
+                    2: { fillColor: [34, 197, 94] }
+                }
             });
-
             y = doc.lastAutoTable.finalY + 15;
+
+            // Tabela 3: DIVISÃO LUCROS
+            doc.setFontSize(16);
+            doc.text('📈 DIVISÃO DE LUCROS', 20, y);
+            y += 8;
 
             doc.autoTable({
                 startY: y,
-                head: [['Divisão', 'R$']],
+                head: [['Participante', 'Valor']],
                 body: [
-                    ['Empresa (40%)', formatCurrency(window.currentData.companyProfit)],
-                    ['Sócio 1 (20%)', formatCurrency(window.currentData.partnerProfit)],
-                    ['Sócio 2 (20%)', formatCurrency(window.currentData.partnerProfit)],
-                    ['Sócio 3 (20%)', formatCurrency(window.currentData.partnerProfit)]
+                    ['🏢 Empresa (40%)', formatCurrency(window.currentData.companyProfit)],
+                    ['👤 Sócio 1 (20%)', formatCurrency(window.currentData.partnerProfit)],
+                    ['👤 Sócio 2 (20%)', formatCurrency(window.currentData.partnerProfit)],
+                    ['👤 Sócio 3 (20%)', formatCurrency(window.currentData.partnerProfit)]
                 ],
                 theme: 'grid',
-                styles: { fontSize: 10, cellPadding: 4 },
-                headStyles: { fillColor: [30, 58, 138] },
-                columnStyles: { 0: { halign: 'left' }, 1: { halign: 'right' } }
+                styles: { fontSize: 11, cellPadding: 6 },
+                headStyles: { fillColor: [30, 58, 138], textColor: 255, fontStyle: 'bold' },
+                columnStyles: { 0: { halign: 'left' }, 1: { halign: 'right', fontStyle: 'bold' } }
             });
+
+            // Footer
+            doc.setFontSize(9);
+            doc.setTextColor(128, 128, 128);
+            doc.text(`Gerado: ${new Date().toLocaleString('pt-BR')}`, 105, 290, { align: 'center' });
 
             doc.save(`OTSA_${window.currentData.productName.replace(/[^a-z0-9]/gi, '_')}.pdf`);
         }
